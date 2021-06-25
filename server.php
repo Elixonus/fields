@@ -67,6 +67,11 @@ class Point
         return $this;
     }
     
+    function normalize()
+    {
+        return $this->divideBy($this->getMagnitude());
+    }
+    
     function getMagnitude()
     {
         return hypot($this->x, $this->y);
@@ -152,28 +157,57 @@ class Charge
 
 $width = 1000;
 $height = 1000;
-$charges = array(new Charge(1, new Point(500, 500)));
+$fieldLinesPerCharge = 30;
+$maxIterationsPerFieldLine = 1000;
+$stepPerIteration = 5;
+
+//$charges = array(new Charge(100, new Point(700, 500)), new Charge(-100, new Point(400, 300)), new Charge(-100, new Point(500, 800)));
+$charges = array(new Charge(-100, new Point(400, 600)), new Charge(200, new Point(800, 200)));
 $field = new Field($charges);
 
 $draw = new ImagickDraw();
-$draw->setStrokeWidth(3);
+$draw->setStrokeColor('#000000');
+$draw->setFillOpacity(0);
 
-for($n = 0; $n < count($charges); $n++)
+for($c = 0; $c < count($charges); $c++)
 {
-    $charge = $charges[$n];
+    $charge = $charges[$c];
     
     if($charge->charge !== 0)
     {
-        for($k = 0; $k < 10; $k++)
+        for($l = 0; $l < $fieldLinesPerCharge; $l++)
         {
+            $position = $charge->position->copy();
+            $direction = $l / $fieldLinesPerCharge * 2 * pi();
+            $draw->pathStart();
+            $draw->pathMoveToAbsolute($position->x, $position->y);
+            $position->addToPolar($stepPerIteration, $direction);
+            $draw->pathLineToAbsolute($position->x, $position->y);
             
+            for($i = 0; $i < $maxIterationsPerFieldLine - 1; $i++)
+            {
+                $normalizedFieldAtPoint = $field->getElectricFieldVectorAtPoint($position)->normalize()->multiplyBy($stepPerIteration);
+                
+                if($charge->charge < 0)
+                {
+                    $normalizedFieldAtPoint->multiplyBy(-1);
+                }
+                
+                $position->addTo($normalizedFieldAtPoint);
+                $draw->pathLineToAbsolute($position->x, $position->y);
+            }
+            
+            $draw->pathFinish();
         }
     }
 }
 
-for($n = 0; $n < count($charges); $n++)
+$draw->setStrokeWidth(3);
+$draw->setFillOpacity(1);
+
+for($c = 0; $c < count($charges); $c++)
 {
-    $charge = $charges[$n];
+    $charge = $charges[$c];
     
     if($charge->charge < 0)
     {
@@ -193,27 +227,14 @@ for($n = 0; $n < count($charges); $n++)
         $draw->setFillColor('#aaaaaa'); 
     }
     
-    $draw->circle($charges[$n]->position->x, $charges[$n]->position->y, $charges[$n]->position->x + 20, $charges[$n]->position->y);
+    $draw->circle($charges[$c]->position->x, $charges[$c]->position->y, $charges[$c]->position->x + 15, $charges[$c]->position->y);
 }
 
 
 $image = new Imagick();
-$image->newImage($width, $height, new ImagickPixel('white'));
+$image->newImage($width, $height, 'white');
 $image->setImageFormat('png');
 $image->drawImage($draw);
-
-$pixels = array();
-
-for($x = 0; $x < $width; $x++)
-{
-    for($y = 0; $y < $height; $y++)
-    {
-        $value = $field->getElectricFieldVectorAtPoint(new Point($x, $y))->getMagnitude() / 300;
-        array_push($pixels, $value, $value, $value);
-    }
-}
-
-$image->importImagePixels(0, 0, $width, $height, 'RGB', Imagick::PIXEL_CHAR, $pixels);
 header('Content-Type: image/png');
 echo $image;
 
