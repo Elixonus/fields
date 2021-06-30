@@ -93,7 +93,7 @@ class Point
     }
 }
 
-class Field
+class Collection
 {
     public $charges;
     
@@ -142,7 +142,7 @@ class Field
     }
 }
 
-class Charge
+class PointCharge
 {
     public $charge;
     public $position;
@@ -155,15 +155,58 @@ class Charge
     }
 }
 
-$width = 1000;
-$height = 1000;
-$fieldLinesPerCharge = 30;
-$maxIterationsPerFieldLine = 1000;
-$stepPerIteration = 5;
+class ShapeCharge
+{
+    public $charge;
+    public $position;
+    public $vertices;
+    public $pointCharges;
+    
+    function __construct($charge, $position, $vertices, $numberOfPointCharges)
+    {
+        $this->charge = $charge;
+        $this->position = $position;
+        $this->vertices = $vertices;
+        $vertexCount = count($vertices);
+        $sides = array();
+        
+        for($v = 0; $v < $vertexCount; $v++)
+        {
+            array_push($sides, $vertices[$v]->getDistanceTo($vertices[($v + 1) % $vertexCount]));
+        }
+        
+        for($c = 0; $c < $numberOfPointCharges; $c++)
+        {
+            // insert point charges in shape
+        }
+        
+        return $this;
+    }
+}
+
+$elementaryCharge = 1.6021E19;
+
+$graphWidth = 1500;
+$graphHeight = 1500;
+
+$fieldLinesPerCharge = 50;
+$maxIterationsPerFieldLine = 2000;
+$stepPerIteration = 0.01;
+$simulationWidth = 1000;
+$minimumX = 0;
+$maximumX = 1;
+$differenceX = $maximumX - $minimumX;
+$multiplierX = $simulationWidth / $differenceX;
+$simulationHeight = 1000;
+$minimumY = 0;
+$maximumY = 1;
+$differenceY = $maximumY - $minimumY;
+$multiplierY = $simulationHeight / $differenceY;
 
 //$charges = array(new Charge(100, new Point(700, 500)), new Charge(-100, new Point(400, 300)), new Charge(-100, new Point(500, 800)));
-$charges = array(new Charge(-100, new Point(400, 600)), new Charge(200, new Point(800, 200)));
-$field = new Field($charges);
+//$charges = array(new Charge($elementaryCharge, new Point(0.4, 0.6)), new Charge($elementaryCharge, new Point(0.6, 0.5)), new Charge(-$elementaryCharge, new Point(0.2, 0.2)));
+$charges = array(new PointCharge($elementaryCharge, new Point(0.2, 0.5)), new PointCharge(-$elementaryCharge, new Point(0.8, 0.5)));
+$collection = new Collection($charges);
 
 $draw = new ImagickDraw();
 $draw->setStrokeColor('#000000');
@@ -179,22 +222,46 @@ for($c = 0; $c < count($charges); $c++)
         {
             $position = $charge->position->copy();
             $direction = $l / $fieldLinesPerCharge * 2 * pi();
+            $screenPosition = virtualPositionToScreenCoordinates($position);
             $draw->pathStart();
-            $draw->pathMoveToAbsolute($position->x, $position->y);
+            $draw->pathMoveToAbsolute($screenPosition[0], $screenPosition[1]);
             $position->addToPolar($stepPerIteration, $direction);
-            $draw->pathLineToAbsolute($position->x, $position->y);
+            $screenPosition = virtualPositionToScreenCoordinates($position);
+            $draw->pathLineToAbsolute($screenPosition[0], $screenPosition[1]);
             
             for($i = 0; $i < $maxIterationsPerFieldLine - 1; $i++)
             {
-                $normalizedFieldAtPoint = $field->getElectricFieldVectorAtPoint($position)->normalize()->multiplyBy($stepPerIteration);
+                $normalizedFieldAtPoint = $collection->getElectricFieldVectorAtPoint($position)->normalize();
                 
                 if($charge->charge < 0)
                 {
                     $normalizedFieldAtPoint->multiplyBy(-1);
                 }
                 
-                $position->addTo($normalizedFieldAtPoint);
-                $draw->pathLineToAbsolute($position->x, $position->y);
+                $position->addTo($normalizedFieldAtPoint->multiplyBy($stepPerIteration));
+                $screenPosition = virtualPositionToScreenCoordinates($position);
+                $breakTwice = false;
+                
+                for($cc = 0; $cc < count($charges); $cc++)
+                {
+                    if($c === $cc)
+                    {
+                        continue;
+                    }
+                    
+                    if($position->getDistanceTo($charges[$cc]->position) < $stepPerIteration)
+                    {
+                        $breakTwice = true;
+                        break;
+                    }
+                }
+                
+                $draw->pathLineToAbsolute($screenPosition[0], $screenPosition[1]);
+                
+                if($breakTwice)
+                {
+                    break;
+                }
             }
             
             $draw->pathFinish();
@@ -227,15 +294,22 @@ for($c = 0; $c < count($charges); $c++)
         $draw->setFillColor('#aaaaaa'); 
     }
     
-    $draw->circle($charges[$c]->position->x, $charges[$c]->position->y, $charges[$c]->position->x + 15, $charges[$c]->position->y);
+    $screenPosition = virtualPositionToScreenCoordinates($charge->position);
+    $draw->circle($screenPosition[0], $screenPosition[1], $screenPosition[0] + 15, $screenPosition[1]);
 }
 
 
-$image = new Imagick();
-$image->newImage($width, $height, 'white');
-$image->setImageFormat('png');
-$image->drawImage($draw);
+$simulationImage = new Imagick();
+$simulationImage->newImage($simulationWidth, $simulationHeight, 'white');
+$simulationImage->setImageFormat('png');
+$simulationImage->drawImage($draw);
 header('Content-Type: image/png');
-echo $image;
+echo $simulationImage;
+
+function virtualPositionToScreenCoordinates($p)
+{
+    global $minimumX, $multiplierX, $simulationHeight, $minimumY, $multiplierY;
+    return array(($p->x - $minimumX) * $multiplierX, $simulationHeight - ($p->y - $minimumY) * $multiplierY);
+}
 
 ?>
