@@ -12,6 +12,11 @@ class Point
         return $this;
     }
     
+    static function fromPolar($r, $a)
+    {
+        return new Point($r * cos($a), $r * sin($a));
+    }
+    
     function changeTo($p)
     {
         return $this->changeToCoordinates($p->x, $p->y);
@@ -109,6 +114,11 @@ class Collection
         return $this;
     }
     
+    function removeCharge($charge)
+    {
+        return $this->removeChargeIndex(array_search($charge, $this->charges));
+    }
+    
     function removeChargeIndex($index)
     {
         array_splice($this->charges, $index, 1);
@@ -117,28 +127,26 @@ class Collection
     
     function getElectricFieldVectorAtPoint($point)
     {
-        $vector = new Point(0, 0);
+        $sumVector = new Point(0, 0);
         
         for($c = 0; $c < count($this->charges); $c++)
         {
             $charge = $this->charges[$c];
-            $distanceToCharge = $charge->position->getDistanceTo($point);
-            $direction = $charge->position->getDirectionTo($point);
+            $vector = $charge->getElectricFieldVectorAtPoint($point);
             
-            if($distanceToCharge === 0.0)
+            if(abs($vector->x) === INF || abs($vector->y) === INF)
             {
-                $magnitude = INF;
+                $sumVector = $vector;
+                break;
             }
             
             else
             {
-                $magnitude = 8.9875517923E9 * $charge->charge / pow($distanceToCharge, 2);    
+                $sumVector->addTo($vector);
             }
-            
-            $vector->addToPolar($magnitude, $direction);
         }
         
-        return $vector;
+        return $sumVector;
     }
 }
 
@@ -153,6 +161,23 @@ class PointCharge
         $this->position = $position;
         return $this;
     }
+    
+    function getElectricFieldVectorAtPoint($point)
+    {
+        $distanceToPoint = $this->position->getDistanceTo($point);
+        
+        if($distanceToPoint == 0)
+        {
+            return new Point(INF, 0);
+        }
+        
+        else
+        {
+            $direction = $this->position->getDirectionTo($point);
+            $magnitude = 8.9875517923E9 * $this->charge / pow($distanceToPoint, 2);
+            return Point::fromPolar($magnitude, $direction);
+        }
+    }
 }
 
 class ShapeCharge
@@ -160,48 +185,48 @@ class ShapeCharge
     public $charge;
     public $position;
     public $vertices;
-    public $pointCharges;
+    public $isClosed;
     
-    function __construct($charge, $position, $vertices, $numberOfPointCharges)
+    function __construct($charge, $position, $vertices, $isClosed = true)
     {
         $this->charge = $charge;
         $this->position = $position;
         $this->vertices = $vertices;
-        $vertexCount = count($vertices);
-        $sides = array();
-        
-        for($v = 0; $v < $vertexCount; $v++)
-        {
-            array_push($sides, $vertices[$v]->getDistanceTo($vertices[($v + 1) % $vertexCount]));
-        }
-        
-        for($c = 0; $c < $numberOfPointCharges; $c++)
-        {
-            // insert point charges in shape
-        }
-        
+        $this->isClosed = $isClosed;
         return $this;
+    }
+    
+    function getElectricFieldVectorAtPoint($point)
+    {
+        $perimeter = 0;
+        
+        for($v = 0; $v < count($this->vertices) + $this->isClosed - 1; $v++)
+        {
+            $perimeter += $this->vertices[$v]->getDistanceTo($this->vertices[($v + 1) % count($this->vertices)]);
+        }
+        
+        return $perimeter;
     }
 }
 
 $elementaryCharge = 1.6021E19;
 
-$graphWidth = 1500;
-$graphHeight = 1500;
-
 $fieldLinesPerCharge = 50;
 $maxIterationsPerFieldLine = 2000;
 $stepPerIteration = 0.01;
+
+
+
+$graphWidth = 1500;
+$graphHeight = 1500;
 $simulationWidth = 1000;
-$minimumX = 0;
-$maximumX = 1;
-$differenceX = $maximumX - $minimumX;
-$multiplierX = $simulationWidth / $differenceX;
 $simulationHeight = 1000;
+$minimumX = 0;
 $minimumY = 0;
+$maximumX = 1;
 $maximumY = 1;
-$differenceY = $maximumY - $minimumY;
-$multiplierY = $simulationHeight / $differenceY;
+$multiplierX = $simulationWidth / ($maximumX - $minimumX);
+$multiplierY = $simulationHeight / ($maximumY - $minimumY);
 
 //$charges = array(new Charge(100, new Point(700, 500)), new Charge(-100, new Point(400, 300)), new Charge(-100, new Point(500, 800)));
 //$charges = array(new Charge($elementaryCharge, new Point(0.4, 0.6)), new Charge($elementaryCharge, new Point(0.6, 0.5)), new Charge(-$elementaryCharge, new Point(0.2, 0.2)));
@@ -303,13 +328,18 @@ $simulationImage = new Imagick();
 $simulationImage->newImage($simulationWidth, $simulationHeight, 'white');
 $simulationImage->setImageFormat('png');
 $simulationImage->drawImage($draw);
-header('Content-Type: image/png');
-echo $simulationImage;
+//header('Content-Type: image/png');
+//echo $simulationImage;
 
-function virtualPositionToScreenCoordinates($p)
+$shapeCharge = new ShapeCharge(2, new Point(0, 0), array(new Point(0, 0), new Point(10, 0), new Point(10, 10), new Point(0, 10)), true);
+array_push($shapeCharge->vertices, new Point(-1, 5));
+
+echo $shapeCharge->getElectricFieldVectorAtPoint(new Point(0, 0));
+
+function virtualPositionToScreenCoordinates($position)
 {
     global $minimumX, $multiplierX, $simulationHeight, $minimumY, $multiplierY;
-    return array(($p->x - $minimumX) * $multiplierX, $simulationHeight - ($p->y - $minimumY) * $multiplierY);
+    return array(($position->x - $minimumX) * $multiplierX, $simulationHeight - ($position->y - $minimumY) * $multiplierY);
 }
 
 ?>
