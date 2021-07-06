@@ -349,7 +349,7 @@ class LineSegmentCharge
         $distanceToProjection = sqrt($squaredDistanceToEndpoint1 - pow($relativePositionEndpoint1, 2));
         $chargeDensity = $this->charge / $distanceBetweenEndpoints;
         
-        $electricFieldII = $this->charge * $chargeDensity * (1 / $distanceToEndpoint2 - 1 / $distanceToEndpoint1);
+        $electricFieldII = $chargeDensity * (1 / $distanceToEndpoint2 - 1 / $distanceToEndpoint1);
         
         if($distanceToProjection == 0)
         {
@@ -358,7 +358,7 @@ class LineSegmentCharge
         
         else
         {
-            $electricFieldT = $this->charge * $chargeDensity / $distanceToProjection * ($relativePositionEndpoint2 / $distanceToEndpoint2 - $relativePositionEndpoint1 / $distanceToEndpoint1);
+            $electricFieldT = $chargeDensity / $distanceToProjection * ($relativePositionEndpoint2 / $distanceToEndpoint2 - $relativePositionEndpoint1 / $distanceToEndpoint1);
         }
         
         if(($point->x - $this->endpoint1->x) * $lineSegmentVector->y < ($point->y - $this->endpoint1->y) * $lineSegmentVector->x)
@@ -404,12 +404,8 @@ $maximumY = 1;
 $multiplierX = $simulationWidth / ($maximumX - $minimumX);
 $multiplierY = $simulationHeight / ($maximumY - $minimumY);
 
-$charges = array(new PointCharge($elementaryCharge, new Point(0.6, 0.7)), new PointCharge($elementaryCharge, new Point(0.3, 0.1)));
-$charges = array(new PointCharge($elementaryCharge / 10, new Point(0.3, 0.7)));
-$charges = array();
-$lineSegmentCharge = new LineSegmentCharge(1 * $elementaryCharge, new Point(0.5, 0.5), new Point(1, 0.5));
-array_push($charges, $lineSegmentCharge);
-$flashlights = array(new Flashlight(new Point(0.3, 0.5), new Point(0.3, 0.8), 30));
+$charges = array(new LineSegmentCharge(-$elementaryCharge, new Point(0.3, 0.7), new Point(0.4, 0.6)), new LineSegmentCharge(-$elementaryCharge, new Point(0.4, 0.6), new Point(0.6, 0.6)), new LineSegmentCharge(-$elementaryCharge, new Point(0.6, 0.6), new Point(0.6, 0.4)), new LineSegmentCharge(-$elementaryCharge, new Point(0.6, 0.4), new Point(0.4, 0.4)));
+$flashlights = array(new Flashlight(new Point(0, 0.7), new Point(1, 1), 30), new Flashlight(new Point(0, 0), new Point(1, 0.2), 30));
 $collection = new Collection($charges, $flashlights);
 
 $simulationDraw = new ImagickDraw();
@@ -427,7 +423,7 @@ for($f = 0; $f < count($collection->flashlights); $f++)
     
     for($l1 = 0; $l1 < $flashlight->numberOfFieldLines; $l1++)
     {
-        for($d = -1; $d >= -1; $d -= 2)
+        for($d = 1; $d >= -1; $d -= 2)
         {
             $fieldLinePosition = $flashlight->endpoint1->copy()->interpolateToPoint($flashlight->endpoint2, (($flashlight->numberOfFieldLines === 1) ? 0.5 : $l1 / ($flashlight->numberOfFieldLines - 1)));
             $screenCoordinates = virtualPositionToScreenCoordinates($fieldLinePosition);
@@ -501,9 +497,14 @@ for($c = 0; $c < count($charges); $c++)
     }
 }
 
-$screenPosition1 = virtualPositionToScreenCoordinates($flashlights[0]->endpoint1);
-$screenPosition2 = virtualPositionToScreenCoordinates($flashlights[0]->endpoint2);
-$simulationDraw->line($screenPosition1[0], $screenPosition1[1], $screenPosition2[0], $screenPosition2[1]);
+$simulationDraw->setStrokeColor('#555555');
+
+for($f = 0; $f < count($flashlights); $f++)
+{
+    $screenPosition1 = virtualPositionToScreenCoordinates($flashlights[$f]->endpoint1);
+    $screenPosition2 = virtualPositionToScreenCoordinates($flashlights[$f]->endpoint2);
+    $simulationDraw->line($screenPosition1[0], $screenPosition1[1], $screenPosition2[0], $screenPosition2[1]);
+}
 
 $graphDraw = new ImagickDraw();
 $graphDraw->translate(($width - $simulationWidth) / 2, ($height - $simulationHeight) / 2);
