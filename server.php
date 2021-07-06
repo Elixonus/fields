@@ -304,7 +304,7 @@ class PointCharge
         
         if($distanceToPoint == 0)
         {
-            return new Point(INF, 0);
+            return new Point(0, 0);
         }
         
         else
@@ -360,7 +360,7 @@ class LineSegmentCharge
         {
             $electricFieldT = $this->charge * $chargeDensity / $distanceToProjection * ($relativePositionEndpoint2 / $distanceToEndpoint2 - $relativePositionEndpoint1 / $distanceToEndpoint1);
         }
-
+        
         if(($point->x - $this->endpoint1->x) * $lineSegmentVector->y < ($point->y - $this->endpoint1->y) * $lineSegmentVector->x)
         {
             $isPointAboveLineSegment = true;
@@ -370,53 +370,8 @@ class LineSegmentCharge
         {
             $isPointAboveLineSegment = false;
         }
-
-        return (new Point($lineSegmentVector->x * $electricFieldII + (1 - 2 * $isPointAboveLineSegment) * $lineSegmentVector->y * $electricFieldT, (2 * $isPointAboveLineSegment - 1) * ($lineSegmentVector->y * $electricFieldII + $lineSegmentVector->x * $electricFieldT)))->divideBy($distanceBetweenEndpoints);
-    }
-}
-
-class ShapeCharge
-{
-    public $charge;
-    public $position;
-    public $vertices;
-    public $isClosed;
-    
-    function __construct($charge, $position, $vertices, $isClosed = true)
-    {
-        $this->charge = $charge;
-        $this->position = $position;
-        $this->vertices = $vertices;
-        $this->isClosed = $isClosed;
-        return $this;
-    }
-    
-    function getElectricFieldVectorAtPoint($point)
-    {
-        $sides = array();
-        $numberOfSides = count($this->vertices) + $this->isClosed - 1;
-        $perimeter = 0;
         
-        for($s = 0; $s < $numberOfSides; $s++)
-        {
-            $side = $this->vertices[$s]->getDistanceTo($this->vertices[($s + 1) % count($this->vertices)]);
-            array_push($sides, $side);
-            $perimeter += $side;
-        }
-        
-        for($s = 0; $s < $numberOfSides; $s++)
-        {
-            $side = $sides[$s];
-            $endpoint1 = $this->vertices[$s];
-            $endpoint2 = $this->vertices[($s + 1) % count($this->vertices)];
-            $difference1 = $point->copy()->subtractTo($endpoint1);
-            $difference2 = $endpoint2->copy()->subtractTo($endpoint1);
-            $dotProduct = $difference1->x * $difference2->x + $difference1->y * $difference2->y;
-            $magicNumber = $dotProduct / pow($side, 2);
-            $closestPoint = new Point($endpoint1->x + $magicNumber * $difference2->x, $endpoint1->y + $magicNumber * $difference2->y);
-        }
-        
-        return;
+        return (new Point($lineSegmentVector->x * $electricFieldII + (1 - 2 * $isPointAboveLineSegment) * $lineSegmentVector->y * $electricFieldT, $lineSegmentVector->y * $electricFieldII + (2 * $isPointAboveLineSegment - 1) * $lineSegmentVector->x * $electricFieldT))->divideBy($distanceBetweenEndpoints);
     }
 }
 
@@ -435,8 +390,8 @@ class Flashlight
 }
 
 $elementaryCharge = 1.6021E19;
-$maxIterationsPerFieldLine = 500;
-$stepPerIteration = 0.005;
+$maxIterationsPerFieldLine = 1000;
+$stepPerIteration = 0.001;
 
 $width = 1000;
 $height = 1000;
@@ -452,9 +407,9 @@ $multiplierY = $simulationHeight / ($maximumY - $minimumY);
 $charges = array(new PointCharge($elementaryCharge, new Point(0.6, 0.7)), new PointCharge($elementaryCharge, new Point(0.3, 0.1)));
 $charges = array(new PointCharge($elementaryCharge / 10, new Point(0.3, 0.7)));
 $charges = array();
-$lineSegmentCharge = new LineSegmentCharge(-1 * $elementaryCharge, new Point(0.2, 0.8), new Point(0.4, 0.5));
+$lineSegmentCharge = new LineSegmentCharge(1 * $elementaryCharge, new Point(0.5, 0.5), new Point(1, 0.5));
 array_push($charges, $lineSegmentCharge);
-$flashlights = array(new Flashlight(new Point(0.6, 0.4), new Point(1, 0.8), 50));
+$flashlights = array(new Flashlight(new Point(0.3, 0.5), new Point(0.3, 0.8), 30));
 $collection = new Collection($charges, $flashlights);
 
 $simulationDraw = new ImagickDraw();
@@ -472,31 +427,21 @@ for($f = 0; $f < count($collection->flashlights); $f++)
     
     for($l1 = 0; $l1 < $flashlight->numberOfFieldLines; $l1++)
     {
-        for($d = 1; $d >= -1; $d -= 2)
+        for($d = -1; $d >= -1; $d -= 2)
         {
             $fieldLinePosition = $flashlight->endpoint1->copy()->interpolateToPoint($flashlight->endpoint2, (($flashlight->numberOfFieldLines === 1) ? 0.5 : $l1 / ($flashlight->numberOfFieldLines - 1)));
             $screenCoordinates = virtualPositionToScreenCoordinates($fieldLinePosition);
             $simulationDraw->pathStart();
             $simulationDraw->pathMoveToAbsolute($screenCoordinates[0], $screenCoordinates[1]);
-            $doBreak = false;
             
             for($l = 0; $l < $maxIterationsPerFieldLine; $l++)
             {
                 $normalizedFieldAtPoint = $collection->getElectricFieldVectorAtPoint($fieldLinePosition)->normalize();
                 
-                
-                if($l > 0 && $f === 0 && $l1 === 0 && $d === -1)
+                if($normalizedFieldAtPoint->x == 0 && $normalizedFieldAtPoint->y == 0)
                 {
-                    //var_dump ($previousNormalizedFieldAtPoint->x * $normalizedFieldAtPoint->x + $previousNormalizedFieldAtPoint->y * $normalizedFieldAtPoint->y < 0);
-                    //var_dump($previousNormalizedFieldAtPoint);
-                    /*var_dump($previousNormalizedFieldAtPoint);
-                    var_dump($normalizedFieldAtPoint);
-                    var_dump($previousNormalizedFieldAtPoint->x * $normalizedFieldAtPoint->x + $previousNormalizedFieldAtPoint->y * $normalizedFieldAtPoint->y < 0);
-                    echo '<br><br><br>';*/
+                    break;
                 }
-                
-                //echo $previousNormalizedFieldAtPoint->x * $normalizedFieldAtPoint->x + $previousNormalizedFieldAtPoint->y * $normalizedFieldAtPoint->y < 0;
-                
                 
                 if($l > 0)
                 {
@@ -509,32 +454,7 @@ for($f = 0; $f < count($collection->flashlights); $f++)
                 $previousNormalizedFieldAtPoint = $normalizedFieldAtPoint->copy();
                 $fieldLinePosition->addTo($normalizedFieldAtPoint->multiplyBy($stepPerIteration)->multiplyBy($d));
                 $screenCoordinates = virtualPositionToScreenCoordinates($fieldLinePosition);
-                
-/*                for($c = 0; $c < count($charges); $c++)
-                {
-                    $charge = $charges[$c];
-                    
-                    if($charge->charge != 0 && ($d < 0) !== ($charge->charge < 0))
-                    {
-                        if(get_class($charge) === 'PointCharge')
-                        {
-                            if($fieldLinePosition->getDistanceTo($charges[$c]->position) < $stepPerIteration)
-                            {
-                                $doBreak = true;
-                                break;
-                            }
-                        }
-                    }
-                }*/
-                
-                
-                
                 $simulationDraw->pathLineToAbsolute($screenCoordinates[0], $screenCoordinates[1]);
-                
-                /*if($doBreak)
-                {
-                    break;
-                }*/
             }
             
             $simulationDraw->pathFinish();
@@ -598,18 +518,6 @@ $image->drawImage($graphDraw);
 $image->drawImage($simulationDraw);
 header('Content-Type: image/png');
 echo $image;
-
-/*$matrix1 = new Matrix([[1, 2], [3, 4]]);
-$matrix2 = new Matrix([[5], [6]]);
-
-var_dump($matrix1->getMatrixMultiplyBy($matrix2));*/
-
-//$collection->getElectricFieldVectorAtPoint(new Point(0.45, 0.6))->normalize();
-
-/*$shapeCharge = new ShapeCharge(2, new Point(0, 0), array(new Point(0, 0), new Point(10, 0), new Point(10, 10), new Point(0, 10)), true);
-array_push($shapeCharge->vertices, new Point(-1, 5));
-
-echo $shapeCharge->getElectricFieldVectorAtPoint(new Point(0, 0));*/
 
 function virtualPositionToScreenCoordinates($position)
 {
