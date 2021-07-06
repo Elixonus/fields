@@ -94,6 +94,11 @@ class Point
         return hypot($this->x - $p->x, $this->y - $p->y);
     }
     
+    function getSquaredDistanceTo($p)
+    {
+        return (pow($this->x - $p->x, 2) + pow($this->y - $p->y, 2));
+    }
+    
     function getDirectionTo($p)
     {
         return atan2($p->y - $this->y, $p->x - $this->x);
@@ -102,6 +107,128 @@ class Point
     function copy()
     {
         return new Point($this->x, $this->y);
+    }
+}
+
+class Matrix
+{
+    public $data;
+    
+    function __construct($data)
+    {
+        $this->data = $data;
+        return $this;
+    }
+    
+    static function fromFill($number, $rows, $columns)
+    {
+        $matrixData = array();
+        
+        for($m = 0; $m < $rows; $m++)
+        {
+            array_push($matrixData, array());
+            
+            for($n = 0; $n < $columns; $n++)
+            {
+                array_push($matrixData[$m], $number);
+            }
+        }
+        
+        return new Matrix($matrixData);
+    }
+    
+    function changeTo($matrix)
+    {
+        $this->data = $matrix->data;
+        return $this;
+    }
+    
+    function addTo($matrix)
+    {
+        for($m = 0; $m < count($this->data); $m++)
+        {
+            for($n = 0; $n < count($this->data[$m]); $n++)
+            {
+                $this->data[$m][$n] += $matrix->data[$m][$n];
+            }
+        }
+        
+        return $this;
+    }
+    
+    function subtractTo($matrix)
+    {
+        for($m = 0; $m < count($this->data); $m++)
+        {
+            for($n = 0; $n < count($this->data[$m]); $n++)
+            {
+                $this->data[$m][$n] -= $matrix->data[$m][$n];
+            }
+        }
+        
+        return $this;
+    }
+    
+    function multiplyBy($number)
+    {
+        for($m = 0; $m < count($this->data); $m++)
+        {
+            for($n = 0; $n < count($this->data[$m]); $n++)
+            {
+                $this->data[$m][$n] *= $number;
+            }
+        }
+        
+        return $this;
+    }
+    
+    function divideBy($number)
+    {
+        for($m = 0; $m < count($this->data); $m++)
+        {
+            for($n = 0; $n < count($this->data[$m]); $n++)
+            {
+                $this->data[$m][$n] /= $number;
+            }
+        }
+        
+        return $this;
+    }
+    
+    function getMatrixMultiplyBy($matrix)
+    {
+        $newMatrixData = array();
+        
+        for($m = 0; $m < count($this->data); $m++)
+        {
+            array_push($newMatrixData, array());
+            
+            for($n = 0; $n < count($matrix->data[0]); $n++)
+            {
+                $sum = 0;
+                
+                for($k = 0; $k < count($this->data[0]); $k++)
+                {
+                    $sum += $this->data[$m][$k] * $matrix->data[$k][$n];
+                }
+                
+                array_push($newMatrixData[$m], $sum);
+            }
+        }
+        
+        return new Matrix($newMatrixData);
+    }
+    
+    function getDotProductWith($matrix)
+    {
+        $sum = 0;
+        
+        for($k = 0; $k < count($this->data); $k++)
+        {
+            $sum += $this->data[$k] * $matrix->data[$k];
+        }
+        
+        return $sum;
     }
 }
 
@@ -205,47 +332,46 @@ class LineSegmentCharge
     
     function getElectricFieldVectorAtPoint($point)
     {
-        $dx = $this->endpoint2->x - $this->endpoint1->x;
-        $dy = $this->endpoint2->y - $this->endpoint1->y;
-        $dp1p2 = sqrt(pow($dx, 2) + pow($dy, 2));
-        $a = ($dx * ($this->endpoint1->x - $point->x) + $dy * ($this->endpoint1->y - $point->y)) / $dp1p2;
-        $b = $a + $dp1p2;
-        $dasq = pow($point->x - $this->endpoint1->x, 2) + pow($point->y - $this->endpoint1->y, 2);
-        $dbsq = pow($point->x - $this->endpoint2->x, 2) + pow($point->y - $this->endpoint2->y, 2);
-        $z = sqrt($dasq - pow($a, 2));
-        $da = sqrt($dasq);
-        $db = sqrt($dbsq);
-        $eII = $this->charge * 8.9875517923E9 * (1 / $db - 1 / $da);
-        $eT = $this->charge * 8.9875517923E9 / $z * ($b / $db - $a / $da);
+        $lineSegmentVector = $this->endpoint2->copy()->subtractTo($this->endpoint1);
+        $distanceBetweenEndpoints = $lineSegmentVector->getMagnitude();
+        $relativePositionEndpoint1 = ($lineSegmentVector->x * ($this->endpoint1->x - $point->x) + $lineSegmentVector->y * ($this->endpoint1->y - $point->y)) / $distanceBetweenEndpoints;
+        $relativePositionEndpoint2 = $relativePositionEndpoint1 + $distanceBetweenEndpoints;
+        $squaredDistanceToEndpoint1 = $point->getSquaredDistanceTo($this->endpoint1);
+        $squaredDistanceToEndpoint2 = $point->getSquaredDistanceTo($this->endpoint2);
+        $distanceToEndpoint1 = sqrt($squaredDistanceToEndpoint1);
+        $distanceToEndpoint2 = sqrt($squaredDistanceToEndpoint2);
         
-        
-        /*$theta = atan2($this->endpoint2->y - $this->endpoint1->y, $this->endpoint2->x - $this->endpoint1->x);
-        $matrix = array(array(cos($theta), -sin($theta)), array(sin($theta), cos($theta)));
-        $ex = $matrix[0][0] * $eII + $matrix[0][1] * $eT;
-        $ey = $matrix[1][0] * $eII + $matrix[1][1] * $eT;*/
-        
-        
-        
-        
-        $matrixAbove = [[$dx / $dp1p2, -$dy / $dp1p2], [$dy / $dp1p2, $dx / $dp1p2]];
-        $matrixBelow = [[$dx / $dp1p2, $dy / $dp1p2], [-$dy / $dp1p2, $dx / $dp1p2]];
-        $matrixBelow = $matrixAbove;
-        
-        if(($point->x - $this->endpoint1->x) * $dy <= ($point->y - $this->endpoint1->y) * $dx)
+        if($distanceToEndpoint1 == 0 || $distanceToEndpoint2 == 0)
         {
-            $matrix = $matrixAbove;
+            return new Point(0, 0);
+        }
+        
+        $distanceToProjection = sqrt($squaredDistanceToEndpoint1 - pow($relativePositionEndpoint1, 2));
+        $chargeDensity = $this->charge / $distanceBetweenEndpoints;
+        
+        $electricFieldII = $this->charge * $chargeDensity * (1 / $distanceToEndpoint2 - 1 / $distanceToEndpoint1);
+        
+        if($distanceToProjection == 0)
+        {
+            $electricFieldT = 0;
         }
         
         else
         {
-            $matrix = $matrixBelow;
+            $electricFieldT = $this->charge * $chargeDensity / $distanceToProjection * ($relativePositionEndpoint2 / $distanceToEndpoint2 - $relativePositionEndpoint1 / $distanceToEndpoint1);
+        }
+
+        if(($point->x - $this->endpoint1->x) * $lineSegmentVector->y < ($point->y - $this->endpoint1->y) * $lineSegmentVector->x)
+        {
+            $isPointAboveLineSegment = true;
         }
         
-        $matrix = $matrixBelow;
-        
-        $ex = $matrix[0][0] * $eII + $matrix[0][1] * $eT;
-        $ey = $matrix[1][0] * $eII + $matrix[1][1] * $eT;
-        return new Point($ex, $ey);
+        else
+        {
+            $isPointAboveLineSegment = false;
+        }
+
+        return (new Point($lineSegmentVector->x * $electricFieldII + (1 - 2 * $isPointAboveLineSegment) * $lineSegmentVector->y * $electricFieldT, (2 * $isPointAboveLineSegment - 1) * ($lineSegmentVector->y * $electricFieldII + $lineSegmentVector->x * $electricFieldT)))->divideBy($distanceBetweenEndpoints);
     }
 }
 
@@ -309,12 +435,8 @@ class Flashlight
 }
 
 $elementaryCharge = 1.6021E19;
-
-$fieldLinesPerCharge = 50;
-$maxIterationsPerFieldLine = 2000;
-$stepPerIteration = 0.001;
-
-
+$maxIterationsPerFieldLine = 500;
+$stepPerIteration = 0.005;
 
 $width = 1000;
 $height = 1000;
@@ -328,10 +450,11 @@ $multiplierX = $simulationWidth / ($maximumX - $minimumX);
 $multiplierY = $simulationHeight / ($maximumY - $minimumY);
 
 $charges = array(new PointCharge($elementaryCharge, new Point(0.6, 0.7)), new PointCharge($elementaryCharge, new Point(0.3, 0.1)));
+$charges = array(new PointCharge($elementaryCharge / 10, new Point(0.3, 0.7)));
 $charges = array();
-$lineSegmentCharge = new LineSegmentCharge(10 * $elementaryCharge, new Point(0.4, 0.5), new Point(0.6, 0.5));
+$lineSegmentCharge = new LineSegmentCharge(-1 * $elementaryCharge, new Point(0.2, 0.8), new Point(0.4, 0.5));
 array_push($charges, $lineSegmentCharge);
-$flashlights = array(new Flashlight(new Point(0, 0.47), new Point(1, 0.47), 100));
+$flashlights = array(new Flashlight(new Point(0.6, 0.4), new Point(1, 0.8), 50));
 $collection = new Collection($charges, $flashlights);
 
 $simulationDraw = new ImagickDraw();
@@ -349,7 +472,7 @@ for($f = 0; $f < count($collection->flashlights); $f++)
     
     for($l1 = 0; $l1 < $flashlight->numberOfFieldLines; $l1++)
     {
-        for($d = 0; $d < 2; $d++)
+        for($d = 1; $d >= -1; $d -= 2)
         {
             $fieldLinePosition = $flashlight->endpoint1->copy()->interpolateToPoint($flashlight->endpoint2, (($flashlight->numberOfFieldLines === 1) ? 0.5 : $l1 / ($flashlight->numberOfFieldLines - 1)));
             $screenCoordinates = virtualPositionToScreenCoordinates($fieldLinePosition);
@@ -361,23 +484,37 @@ for($f = 0; $f < count($collection->flashlights); $f++)
             {
                 $normalizedFieldAtPoint = $collection->getElectricFieldVectorAtPoint($fieldLinePosition)->normalize();
                 
-                if($d === 0)
+                
+                if($l > 0 && $f === 0 && $l1 === 0 && $d === -1)
                 {
-                    $fieldLinePosition->addTo($normalizedFieldAtPoint->multiplyBy($stepPerIteration));
+                    //var_dump ($previousNormalizedFieldAtPoint->x * $normalizedFieldAtPoint->x + $previousNormalizedFieldAtPoint->y * $normalizedFieldAtPoint->y < 0);
+                    //var_dump($previousNormalizedFieldAtPoint);
+                    /*var_dump($previousNormalizedFieldAtPoint);
+                    var_dump($normalizedFieldAtPoint);
+                    var_dump($previousNormalizedFieldAtPoint->x * $normalizedFieldAtPoint->x + $previousNormalizedFieldAtPoint->y * $normalizedFieldAtPoint->y < 0);
+                    echo '<br><br><br>';*/
                 }
                 
-                else
+                //echo $previousNormalizedFieldAtPoint->x * $normalizedFieldAtPoint->x + $previousNormalizedFieldAtPoint->y * $normalizedFieldAtPoint->y < 0;
+                
+                
+                if($l > 0)
                 {
-                    $fieldLinePosition->addTo($normalizedFieldAtPoint->multiplyBy(-$stepPerIteration));
+                    if($previousNormalizedFieldAtPoint->x * $normalizedFieldAtPoint->x + $previousNormalizedFieldAtPoint->y * $normalizedFieldAtPoint->y < 0)
+                    {
+                        break;
+                    }
                 }
                 
+                $previousNormalizedFieldAtPoint = $normalizedFieldAtPoint->copy();
+                $fieldLinePosition->addTo($normalizedFieldAtPoint->multiplyBy($stepPerIteration)->multiplyBy($d));
                 $screenCoordinates = virtualPositionToScreenCoordinates($fieldLinePosition);
                 
-                for($c = 0; $c < count($charges); $c++)
+/*                for($c = 0; $c < count($charges); $c++)
                 {
                     $charge = $charges[$c];
                     
-                    if($charge->charge != 0)
+                    if($charge->charge != 0 && ($d < 0) !== ($charge->charge < 0))
                     {
                         if(get_class($charge) === 'PointCharge')
                         {
@@ -388,87 +525,22 @@ for($f = 0; $f < count($collection->flashlights); $f++)
                             }
                         }
                     }
-                }
+                }*/
+                
+                
                 
                 $simulationDraw->pathLineToAbsolute($screenCoordinates[0], $screenCoordinates[1]);
                 
-                if($doBreak)
+                /*if($doBreak)
                 {
                     break;
-                }
+                }*/
             }
             
             $simulationDraw->pathFinish();
         }
     }
 }
-
-/*for($c = 0; $c < count($charges); $c++)
-{
-    $charge = $charges[$c];
-    
-    if(get_class($charge) !== 'PointCharge')
-    {
-        continue;
-    }
-    
-    if($charge->charge !== 0)
-    {
-        for($l = 0; $l < $fieldLinesPerCharge; $l++)
-        {
-            $position = $charge->position->copy();
-            $direction = $l / $fieldLinesPerCharge * 2 * pi();
-            $screenPosition = virtualPositionToScreenCoordinates($position);
-            $simulationDraw->pathStart();
-            $simulationDraw->pathMoveToAbsolute($screenPosition[0], $screenPosition[1]);
-            $position->addToPolar($stepPerIteration, $direction);
-            $screenPosition = virtualPositionToScreenCoordinates($position);
-            $simulationDraw->pathLineToAbsolute($screenPosition[0], $screenPosition[1]);
-            
-            for($i = 0; $i < $maxIterationsPerFieldLine - 1; $i++)
-            {
-                $normalizedFieldAtPoint = $collection->getElectricFieldVectorAtPoint($position)->normalize();
-                
-                if($charge->charge < 0)
-                {
-                    $normalizedFieldAtPoint->multiplyBy(-1);
-                }
-                
-                $position->addTo($normalizedFieldAtPoint->multiplyBy($stepPerIteration));
-                $screenPosition = virtualPositionToScreenCoordinates($position);
-                $breakTwice = false;
-                
-                for($cc = 0; $cc < count($charges); $cc++)
-                {
-                    if($c === $cc)
-                    {
-                        continue;
-                    }
-                    
-                    if(get_class($charges[$cc]) === 'PointCharge')
-                    {// make sure charge is opposite
-                        if($position->getDistanceTo($charges[$cc]->position) < $stepPerIteration)
-                        {
-                            $breakTwice = true;
-                            break;
-                        }
-                    }
-                }
-                
-                $simulationDraw->pathLineToAbsolute($screenPosition[0], $screenPosition[1]);
-                
-                if($breakTwice)
-                {
-                    break;
-                }
-            }
-            
-            $simulationDraw->pathFinish();
-        }
-    }
-}*/
-
-
 
 $simulationDraw->setStrokeWidth(3);
 $simulationDraw->setFillOpacity(1);
@@ -509,6 +581,10 @@ for($c = 0; $c < count($charges); $c++)
     }
 }
 
+$screenPosition1 = virtualPositionToScreenCoordinates($flashlights[0]->endpoint1);
+$screenPosition2 = virtualPositionToScreenCoordinates($flashlights[0]->endpoint2);
+$simulationDraw->line($screenPosition1[0], $screenPosition1[1], $screenPosition2[0], $screenPosition2[1]);
+
 $graphDraw = new ImagickDraw();
 $graphDraw->translate(($width - $simulationWidth) / 2, ($height - $simulationHeight) / 2);
 $graphDraw->setFillColor('#ffffff');
@@ -522,6 +598,11 @@ $image->drawImage($graphDraw);
 $image->drawImage($simulationDraw);
 header('Content-Type: image/png');
 echo $image;
+
+/*$matrix1 = new Matrix([[1, 2], [3, 4]]);
+$matrix2 = new Matrix([[5], [6]]);
+
+var_dump($matrix1->getMatrixMultiplyBy($matrix2));*/
 
 //$collection->getElectricFieldVectorAtPoint(new Point(0.45, 0.6))->normalize();
 
