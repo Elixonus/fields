@@ -110,128 +110,6 @@ class Point
     }
 }
 
-class Matrix
-{
-    public $data;
-    
-    function __construct($data)
-    {
-        $this->data = $data;
-        return $this;
-    }
-    
-    static function fromFill($number, $rows, $columns)
-    {
-        $matrixData = array();
-        
-        for($m = 0; $m < $rows; $m++)
-        {
-            array_push($matrixData, array());
-            
-            for($n = 0; $n < $columns; $n++)
-            {
-                array_push($matrixData[$m], $number);
-            }
-        }
-        
-        return new Matrix($matrixData);
-    }
-    
-    function changeTo($matrix)
-    {
-        $this->data = $matrix->data;
-        return $this;
-    }
-    
-    function addTo($matrix)
-    {
-        for($m = 0; $m < count($this->data); $m++)
-        {
-            for($n = 0; $n < count($this->data[$m]); $n++)
-            {
-                $this->data[$m][$n] += $matrix->data[$m][$n];
-            }
-        }
-        
-        return $this;
-    }
-    
-    function subtractTo($matrix)
-    {
-        for($m = 0; $m < count($this->data); $m++)
-        {
-            for($n = 0; $n < count($this->data[$m]); $n++)
-            {
-                $this->data[$m][$n] -= $matrix->data[$m][$n];
-            }
-        }
-        
-        return $this;
-    }
-    
-    function multiplyBy($number)
-    {
-        for($m = 0; $m < count($this->data); $m++)
-        {
-            for($n = 0; $n < count($this->data[$m]); $n++)
-            {
-                $this->data[$m][$n] *= $number;
-            }
-        }
-        
-        return $this;
-    }
-    
-    function divideBy($number)
-    {
-        for($m = 0; $m < count($this->data); $m++)
-        {
-            for($n = 0; $n < count($this->data[$m]); $n++)
-            {
-                $this->data[$m][$n] /= $number;
-            }
-        }
-        
-        return $this;
-    }
-    
-    function getMatrixMultiplyBy($matrix)
-    {
-        $newMatrixData = array();
-        
-        for($m = 0; $m < count($this->data); $m++)
-        {
-            array_push($newMatrixData, array());
-            
-            for($n = 0; $n < count($matrix->data[0]); $n++)
-            {
-                $sum = 0;
-                
-                for($k = 0; $k < count($this->data[0]); $k++)
-                {
-                    $sum += $this->data[$m][$k] * $matrix->data[$k][$n];
-                }
-                
-                array_push($newMatrixData[$m], $sum);
-            }
-        }
-        
-        return new Matrix($newMatrixData);
-    }
-    
-    function getDotProductWith($matrix)
-    {
-        $sum = 0;
-        
-        for($k = 0; $k < count($this->data); $k++)
-        {
-            $sum += $this->data[$k] * $matrix->data[$k];
-        }
-        
-        return $sum;
-    }
-}
-
 class Collection
 {
     public $charges;
@@ -263,26 +141,46 @@ class Collection
     
     function getElectricFieldVectorAtPoint($point)
     {
-        $sumVector = new Point(0, 0);
+        $totalElectricField = new Point(0, 0);
         
         for($c = 0; $c < count($this->charges); $c++)
         {
             $charge = $this->charges[$c];
-            $vector = $charge->getElectricFieldVectorAtPoint($point);
+            $electricField = $charge->getElectricFieldVectorAtPoint($point);
             
-            if(abs($vector->x) === INF || abs($vector->y) === INF)
+            if($electricField->x == 0 && $electricField->y == 0)
             {
-                $sumVector = $vector;
-                break;
+                return $electricField;
             }
             
             else
             {
-                $sumVector->addTo($vector);
+                $totalElectricField->addTo($electricField);
             }
         }
         
-        return $sumVector;
+        return $totalElectricField;
+    }
+    
+    function getElectricPotentialAtPoint($point)
+    {
+        $totalElectricPotential = 0;
+        
+        for($c = 0; $c < count($this->charges); $c++)
+        {
+            $charge = $this->charges[$c];
+            $electricPotential = $charge->getElectricPotentialAtPoint($point);
+            
+            if($electricPotential == 0)
+            {
+                return $electricPotential;
+            }
+            
+            else
+            {
+                $totalElectricPotential += $electricPotential;
+            }
+        }
     }
 }
 
@@ -313,6 +211,11 @@ class PointCharge
             $magnitude = 8.9875517923E9 * $this->charge / pow($distanceToPoint, 2);
             return Point::fromPolar($magnitude, $direction);
         }
+    }
+    
+    function getElectricPotentialAtPoint($point)
+    {
+        return (8.9875517923E9 * $this->charge / $this->position->getDistanceTo($point));
     }
 }
 
@@ -349,7 +252,7 @@ class LineSegmentCharge
         $distanceToProjection = sqrt($squaredDistanceToEndpoint1 - pow($relativePositionEndpoint1, 2));
         $chargeDensity = $this->charge / $distanceBetweenEndpoints;
         
-        $electricFieldII = $chargeDensity * (1 / $distanceToEndpoint2 - 1 / $distanceToEndpoint1);
+        $electricFieldII = 8.9875517923E9 * $chargeDensity * (1 / $distanceToEndpoint2 - 1 / $distanceToEndpoint1);
         
         if($distanceToProjection == 0)
         {
@@ -358,7 +261,7 @@ class LineSegmentCharge
         
         else
         {
-            $electricFieldT = $chargeDensity / $distanceToProjection * ($relativePositionEndpoint2 / $distanceToEndpoint2 - $relativePositionEndpoint1 / $distanceToEndpoint1);
+            $electricFieldT = 8.9875517923E9 * $chargeDensity / $distanceToProjection * ($relativePositionEndpoint2 / $distanceToEndpoint2 - $relativePositionEndpoint1 / $distanceToEndpoint1);
         }
         
         if(($point->x - $this->endpoint1->x) * $lineSegmentVector->y < ($point->y - $this->endpoint1->y) * $lineSegmentVector->x)
@@ -390,8 +293,8 @@ class Flashlight
 }
 
 $elementaryCharge = 1.6021E19;
-$maxIterationsPerFieldLine = 1000;
-$stepPerIteration = 0.001;
+$maxIterationsPerFieldLine = 500;
+$stepPerIteration = 0.002;
 
 $width = 1000;
 $height = 1000;
@@ -404,8 +307,9 @@ $maximumY = 1;
 $multiplierX = $simulationWidth / ($maximumX - $minimumX);
 $multiplierY = $simulationHeight / ($maximumY - $minimumY);
 
-$charges = array(new LineSegmentCharge(-$elementaryCharge, new Point(0.3, 0.7), new Point(0.4, 0.6)), new LineSegmentCharge(-$elementaryCharge, new Point(0.4, 0.6), new Point(0.6, 0.6)), new LineSegmentCharge(-$elementaryCharge, new Point(0.6, 0.6), new Point(0.6, 0.4)), new LineSegmentCharge(-$elementaryCharge, new Point(0.6, 0.4), new Point(0.4, 0.4)));
-$flashlights = array(new Flashlight(new Point(0, 0.7), new Point(1, 1), 30), new Flashlight(new Point(0, 0), new Point(1, 0.2), 30));
+$charges = array(new LineSegmentCharge(-$elementaryCharge, new Point(0.3, 0.7), new Point(0.4, 0.6)));
+array_push($charges, new PointCharge(50 * $elementaryCharge, new Point(0.9, 0.9)));
+$flashlights = array(new Flashlight(new Point(0.2, 0.3), new Point(0.2, 1), 30), new Flashlight(new Point(0, 0), new Point(1, 0.2), 30));
 $collection = new Collection($charges, $flashlights);
 
 $simulationDraw = new ImagickDraw();
@@ -414,6 +318,7 @@ $simulationDraw->pushClipPath('square');
 $simulationDraw->rectangle(0, 0, $simulationWidth, $simulationHeight);
 $simulationDraw->popClipPath();
 $simulationDraw->setClipPath('square');
+
 $simulationDraw->setStrokeColor('black');
 $simulationDraw->setFillOpacity(0);
 
@@ -459,50 +364,71 @@ for($f = 0; $f < count($collection->flashlights); $f++)
 }
 
 $simulationDraw->setStrokeWidth(3);
-$simulationDraw->setFillOpacity(1);
 
 for($c = 0; $c < count($charges); $c++)
 {
     $charge = $charges[$c];
     
-    if($charge->charge < 0)
-    {
-        $simulationDraw->setStrokeColor('#0000ff');
-        $simulationDraw->setFillColor('#6666ff');    
-    }
-    
-    else if($charge->charge > 0)
-    {
-        $simulationDraw->setStrokeColor('#ff0000');
-        $simulationDraw->setFillColor('#ff6666'); 
-    }
-    
-    else
-    {
-        $simulationDraw->setStrokeColor('#888888');
-        $simulationDraw->setFillColor('#aaaaaa'); 
-    }
-    
     if(get_class($charge) === 'PointCharge')
     {
+        $simulationDraw->setFillOpacity(1);
+        
+        if($charge->charge < 0)
+        {
+            $simulationDraw->setStrokeColor('#0000ff');
+            $simulationDraw->setFillColor('#6666ff');
+        }
+        
+        else if($charge->charge > 0)
+        {
+            $simulationDraw->setStrokeColor('#ff0000');
+            $simulationDraw->setFillColor('#ff6666');
+        }
+        
+        else
+        {
+            $simulationDraw->setStrokeColor('#888888');
+            $simulationDraw->setFillColor('#aaaaaa');
+        }
+        
         $screenPosition = virtualPositionToScreenCoordinates($charge->position);
         $simulationDraw->circle($screenPosition[0], $screenPosition[1], $screenPosition[0] + 15, $screenPosition[1]);
     }
     
     else if(get_class($charge) === 'LineSegmentCharge')
     {
+        $simulationDraw->setFillOpacity(0);
+        
+        if($charge->charge < 0)
+        {
+            $simulationDraw->setStrokeColor('#0000ff');
+        }
+        
+        else if($charge->charge > 0)
+        {
+            $simulationDraw->setStrokeColor('#ff0000');
+        }
+        
+        else
+        {
+            $simulationDraw->setStrokeColor('#888888');
+        }
+        
         $screenPosition1 = virtualPositionToScreenCoordinates($charge->endpoint1);
         $screenPosition2 = virtualPositionToScreenCoordinates($charge->endpoint2);
         $simulationDraw->line($screenPosition1[0], $screenPosition1[1], $screenPosition2[0], $screenPosition2[1]);
     }
 }
 
-$simulationDraw->setStrokeColor('#555555');
+$simulationDraw->setStrokeColor('black');
+$simulationDraw->setStrokeWidth(10);
+$simulationDraw->setFillOpacity(0);
 
 for($f = 0; $f < count($flashlights); $f++)
 {
-    $screenPosition1 = virtualPositionToScreenCoordinates($flashlights[$f]->endpoint1);
-    $screenPosition2 = virtualPositionToScreenCoordinates($flashlights[$f]->endpoint2);
+    $flashlight = $flashlights[$f];
+    $screenPosition1 = virtualPositionToScreenCoordinates($flashlight->endpoint1);
+    $screenPosition2 = virtualPositionToScreenCoordinates($flashlight->endpoint2);
     $simulationDraw->line($screenPosition1[0], $screenPosition1[1], $screenPosition2[0], $screenPosition2[1]);
 }
 
@@ -524,6 +450,12 @@ function virtualPositionToScreenCoordinates($position)
 {
     global $minimumX, $multiplierX, $simulationHeight, $minimumY, $multiplierY;
     return array(($position->x - $minimumX) * $multiplierX, $simulationHeight - ($position->y - $minimumY) * $multiplierY);
+}
+
+function screenCoordinatesToVirtualPosition($x, $y)
+{
+    global $minimumX, $multiplierX, $simulationHeight, $minimumY, $multiplierY;
+    return new Point($x / $multiplierX + $minimumX, ($simulationHeight - $y) / $multiplierY + $minimumY);
 }
 
 function interpolate($startingValue, $endingValue, $t)
