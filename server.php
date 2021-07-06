@@ -181,6 +181,8 @@ class Collection
                 $totalElectricPotential += $electricPotential;
             }
         }
+        
+        return $totalElectricPotential;
     }
 }
 
@@ -275,6 +277,27 @@ class LineSegmentCharge
         }
         
         return (new Point($lineSegmentVector->x * $electricFieldII + (1 - 2 * $isPointAboveLineSegment) * $lineSegmentVector->y * $electricFieldT, $lineSegmentVector->y * $electricFieldII + (2 * $isPointAboveLineSegment - 1) * $lineSegmentVector->x * $electricFieldT))->divideBy($distanceBetweenEndpoints);
+    }
+    
+    function getElectricPotentialAtPoint($point)
+    {
+        $lineSegmentVector = $this->endpoint2->copy()->subtractTo($this->endpoint1);
+        $distanceBetweenEndpoints = $lineSegmentVector->getMagnitude();
+        $relativePositionEndpoint1 = ($lineSegmentVector->x * ($this->endpoint1->x - $point->x) + $lineSegmentVector->y * ($this->endpoint1->y - $point->y)) / $distanceBetweenEndpoints;
+        $relativePositionEndpoint2 = $relativePositionEndpoint1 + $distanceBetweenEndpoints;
+        $squaredDistanceToEndpoint1 = $point->getSquaredDistanceTo($this->endpoint1);
+        $squaredDistanceToEndpoint2 = $point->getSquaredDistanceTo($this->endpoint2);
+        $distanceToEndpoint1 = sqrt($squaredDistanceToEndpoint1);
+        $distanceToEndpoint2 = sqrt($squaredDistanceToEndpoint2);
+        
+        if($distanceToEndpoint1 == 0 || $distanceToEndpoint2 == 0)
+        {
+            return 0;
+        }
+        
+        $distanceToProjection = sqrt($squaredDistanceToEndpoint1 - pow($relativePositionEndpoint1, 2));
+        $chargeDensity = $this->charge / $distanceBetweenEndpoints;
+        return (8.9875517923E9 * $chargeDensity * log(($relativePositionEndpoint2 + $distanceToEndpoint2) / ($distanceToEndpoint1 - $relativePositionEndpoint1)));
     }
 }
 
