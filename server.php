@@ -217,7 +217,17 @@ class PointCharge
     
     function getElectricPotentialAtPoint($point)
     {
-        return (8.9875517923E9 * $this->charge / $this->position->getDistanceTo($point));
+        $distanceToPoint = $this->position->getDistanceTo($point);
+        
+        if($distanceToPoint == 0)
+        {
+            return 0;
+        }
+        
+        else
+        {
+            return (8.9875517923E9 * $this->charge / $this->position->getDistanceTo($point));
+        }
     }
 }
 
@@ -301,7 +311,7 @@ class LineSegmentCharge
     }
 }
 
-class Flashlight
+class LineSegmentFlashlight
 {
     public $endpoint1;
     public $endpoint2;
@@ -312,12 +322,32 @@ class Flashlight
         $this->endpoint1 = $endpoint1;
         $this->endpoint2 = $endpoint2;
         $this->numberOfFieldLines = $numberOfFieldLines;
+        return $this;
     }
 }
 
-$elementaryCharge = 1.6021E19;
-$maxIterationsPerFieldLine = 500;
-$stepPerIteration = 0.002;
+class CircularArcFlashlight
+{
+    public $position;
+    public $radius;
+    public $startingAngle;
+    public $endingAngle;
+    public $numberOfFieldLines;
+    
+    function __construct($position, $radius, $startingAngle, $endingAngle, $numberOfFieldLines)
+    {
+        $this->position = $position;
+        $this->radius = $radius;
+        $this->startingAngle = $startingAngle;
+        $this->endingAngle = $endingAngle;
+        $this->numberOfFieldLines = $numberOfFieldLines;
+        return $this;
+    }
+}
+
+$elementaryCharge = 1.6021E-19;
+$maxIterationsPerFieldLine = 1000;
+$stepPerIteration = 0.005;
 
 $width = 1000;
 $height = 1000;
@@ -330,20 +360,45 @@ $maximumY = 1;
 $multiplierX = $simulationWidth / ($maximumX - $minimumX);
 $multiplierY = $simulationHeight / ($maximumY - $minimumY);
 
-$charges = array(new LineSegmentCharge(-$elementaryCharge, new Point(0.3, 0.7), new Point(0.4, 0.6)));
-array_push($charges, new PointCharge(50 * $elementaryCharge, new Point(0.9, 0.9)));
-$flashlights = array(new Flashlight(new Point(0.2, 0.3), new Point(0.2, 1), 30), new Flashlight(new Point(0, 0), new Point(1, 0.2), 30));
+//$charges = array(new PointCharge(2E-6, new Point(0.3, 0.5)), new PointCharge(-2E-6, new Point(0.7, 0.5)));
+$charges = array(new LineSegmentCharge(35, new Point(0.4, 0.4), new Point(0.6, 0.6)));
+$flashlights = array(new CircularArcFlashlight(new Point(0.5, 0.6), 0.4, 0, pi() / 4, 10));
 $collection = new Collection($charges, $flashlights);
 
-$simulationDraw = new ImagickDraw();
-$simulationDraw->translate(($width - $simulationWidth) / 2, ($height - $simulationHeight) / 2);
+$electricFieldDraw = new ImagickDraw();
+$electricFieldDraw->translate($simulationWidth / 2, $simulationHeight / 2);
+$electricFieldDraw->scale(1, -1);
+$electricFieldDraw->translate(-$simulationWidth / 2, -$simulationHeight / 2);
+/*$simulationDraw->translate(($width - $simulationWidth) / 2, ($height - $simulationHeight) / 2);
 $simulationDraw->pushClipPath('square');
 $simulationDraw->rectangle(0, 0, $simulationWidth, $simulationHeight);
 $simulationDraw->popClipPath();
-$simulationDraw->setClipPath('square');
+$simulationDraw->setClipPath('square');*/
 
-$simulationDraw->setStrokeColor('black');
-$simulationDraw->setFillOpacity(0);
+/*$electricPotentialValues = array();
+
+for($y = 0; $y < $simulationWidth; $y++)
+{
+    for($x = 0; $x < $simulationHeight; $x++)
+    {
+        $input = $collection->getElectricPotentialAtPoint(screenCoordinatesToVirtualPosition($x, $y));
+        
+        if($input < 0)
+        {
+            $value = 127 * (0.5 / exp(-0.000003 * $input));
+        }
+        
+        else
+        {
+            $value = 128 * (1 - 0.5 / exp(0.000003 * $input)) + 127;
+        }
+        
+        array_push($electricPotentialValues, $value, $value, $value);
+    }
+}*/
+
+$electricFieldDraw->setStrokeColor('black');
+$electricFieldDraw->setFillOpacity(0);
 
 for($f = 0; $f < count($collection->flashlights); $f++)
 {
@@ -353,10 +408,20 @@ for($f = 0; $f < count($collection->flashlights); $f++)
     {
         for($d = 1; $d >= -1; $d -= 2)
         {
-            $fieldLinePosition = $flashlight->endpoint1->copy()->interpolateToPoint($flashlight->endpoint2, (($flashlight->numberOfFieldLines === 1) ? 0.5 : $l1 / ($flashlight->numberOfFieldLines - 1)));
+            if(get_class($flashlight) === 'LineSegmentFlashlight')
+            {
+                $fieldLinePosition = $flashlight->endpoint1->copy()->interpolateToPoint($flashlight->endpoint2, (($flashlight->numberOfFieldLines === 1) ? 0.5 : $l1 / ($flashlight->numberOfFieldLines - 1)));
+            }
+            
+            else if(get_class($flashlight) === 'CircularArcFlashlight')
+            {
+                $fieldLinePosition = $flashlight->position->copy()->addToPolar($flashlight->radius, interpolate($flashlight->startingAngle, $flashlight->endingAngle, ($flashlight->numberOfFieldLines === 1) ? 0.5 : $l1 / ($flashlight->numberOfFieldLines - 1)));
+            }
+            
+            
             $screenCoordinates = virtualPositionToScreenCoordinates($fieldLinePosition);
-            $simulationDraw->pathStart();
-            $simulationDraw->pathMoveToAbsolute($screenCoordinates[0], $screenCoordinates[1]);
+            $electricFieldDraw->pathStart();
+            $electricFieldDraw->pathMoveToAbsolute($screenCoordinates[0], $screenCoordinates[1]);
             
             for($l = 0; $l < $maxIterationsPerFieldLine; $l++)
             {
@@ -378,15 +443,19 @@ for($f = 0; $f < count($collection->flashlights); $f++)
                 $previousNormalizedFieldAtPoint = $normalizedFieldAtPoint->copy();
                 $fieldLinePosition->addTo($normalizedFieldAtPoint->multiplyBy($stepPerIteration)->multiplyBy($d));
                 $screenCoordinates = virtualPositionToScreenCoordinates($fieldLinePosition);
-                $simulationDraw->pathLineToAbsolute($screenCoordinates[0], $screenCoordinates[1]);
+                $electricFieldDraw->pathLineToAbsolute($screenCoordinates[0], $screenCoordinates[1]);
             }
             
-            $simulationDraw->pathFinish();
+            $electricFieldDraw->pathFinish();
         }
     }
 }
 
-$simulationDraw->setStrokeWidth(3);
+$elementsDraw = new ImagickDraw();
+$elementsDraw->translate($simulationWidth / 2, $simulationHeight / 2);
+$elementsDraw->scale(1, -1);
+$elementsDraw->translate(-$simulationWidth / 2, -$simulationHeight / 2);
+$elementsDraw->setStrokeWidth(3);
 
 for($c = 0; $c < count($charges); $c++)
 {
@@ -394,91 +463,114 @@ for($c = 0; $c < count($charges); $c++)
     
     if(get_class($charge) === 'PointCharge')
     {
-        $simulationDraw->setFillOpacity(1);
+        $elementsDraw->setFillOpacity(1);
         
         if($charge->charge < 0)
         {
-            $simulationDraw->setStrokeColor('#0000ff');
-            $simulationDraw->setFillColor('#6666ff');
+            $elementsDraw->setStrokeColor('#0000ff');
+            $elementsDraw->setFillColor('#6666ff');
         }
         
         else if($charge->charge > 0)
         {
-            $simulationDraw->setStrokeColor('#ff0000');
-            $simulationDraw->setFillColor('#ff6666');
+            $elementsDraw->setStrokeColor('#ff0000');
+            $elementsDraw->setFillColor('#ff6666');
         }
         
         else
         {
-            $simulationDraw->setStrokeColor('#888888');
-            $simulationDraw->setFillColor('#aaaaaa');
+            $elementsDraw->setStrokeColor('#888888');
+            $elementsDraw->setFillColor('#aaaaaa');
         }
         
         $screenPosition = virtualPositionToScreenCoordinates($charge->position);
-        $simulationDraw->circle($screenPosition[0], $screenPosition[1], $screenPosition[0] + 15, $screenPosition[1]);
+        $elementsDraw->circle($screenPosition[0], $screenPosition[1], $screenPosition[0] + 15, $screenPosition[1]);
     }
     
     else if(get_class($charge) === 'LineSegmentCharge')
     {
-        $simulationDraw->setFillOpacity(0);
+        $elementsDraw->setFillOpacity(0);
         
         if($charge->charge < 0)
         {
-            $simulationDraw->setStrokeColor('#0000ff');
+            $elementsDraw->setStrokeColor('#0000ff');
         }
         
         else if($charge->charge > 0)
         {
-            $simulationDraw->setStrokeColor('#ff0000');
+            $elementsDraw->setStrokeColor('#ff0000');
         }
         
         else
         {
-            $simulationDraw->setStrokeColor('#888888');
+            $elementsDraw->setStrokeColor('#888888');
         }
         
         $screenPosition1 = virtualPositionToScreenCoordinates($charge->endpoint1);
         $screenPosition2 = virtualPositionToScreenCoordinates($charge->endpoint2);
-        $simulationDraw->line($screenPosition1[0], $screenPosition1[1], $screenPosition2[0], $screenPosition2[1]);
+        $elementsDraw->line($screenPosition1[0], $screenPosition1[1], $screenPosition2[0], $screenPosition2[1]);
     }
 }
 
-$simulationDraw->setStrokeColor('black');
-$simulationDraw->setStrokeWidth(10);
-$simulationDraw->setFillOpacity(0);
+$elementsDraw->setStrokeLineCap(Imagick::LINECAP_SQUARE);
+$elementsDraw->setFillOpacity(0);
+// imagick bs
 
 for($f = 0; $f < count($flashlights); $f++)
 {
     $flashlight = $flashlights[$f];
-    $screenPosition1 = virtualPositionToScreenCoordinates($flashlight->endpoint1);
-    $screenPosition2 = virtualPositionToScreenCoordinates($flashlight->endpoint2);
-    $simulationDraw->line($screenPosition1[0], $screenPosition1[1], $screenPosition2[0], $screenPosition2[1]);
+    
+    if(get_class($flashlight) === 'LineSegmentFlashlight')
+    {
+        $screenPosition1 = virtualPositionToScreenCoordinates($flashlight->endpoint1);
+        $screenPosition2 = virtualPositionToScreenCoordinates($flashlight->endpoint2);
+        $elementsDraw->setStrokeColor('black');
+        $elementsDraw->setStrokeWidth(10);
+        $elementsDraw->line($screenPosition1[0], $screenPosition1[1], $screenPosition2[0], $screenPosition2[1]);
+        $elementsDraw->setStrokeColor('yellow');
+        $elementsDraw->setStrokeWidth(4);
+        $elementsDraw->line($screenPosition1[0], $screenPosition1[1], $screenPosition2[0], $screenPosition2[1]);
+    }
+    
+    if(get_class($flashlight) === 'CircularArcFlashlight')
+    {
+        $screenPosition1 = virtualPositionToScreenCoordinates($flashlight->position->copy()->subtractToCoordinates($flashlight->radius, $flashlight->radius));
+        $screenPosition2 = virtualPositionToScreenCoordinates($flashlight->position->copy()->addToCoordinates($flashlight->radius, $flashlight->radius));
+        $elementsDraw->setStrokeColor('black');
+        $elementsDraw->setStrokeWidth(10);
+        $elementsDraw->arc($screenPosition1[0], $screenPosition1[1], $screenPosition2[0], $screenPosition2[1], $flashlight->startingAngle * 180 / pi(), $flashlight->endingAngle * 180 / pi());
+        $elementsDraw->setStrokeColor('yellow');
+        $elementsDraw->setStrokeWidth(4);
+        $elementsDraw->arc($screenPosition1[0], $screenPosition1[1], $screenPosition2[0], $screenPosition2[1], $flashlight->startingAngle * 180 / pi(), $flashlight->endingAngle * 180 / pi());
+    }
 }
 
-$graphDraw = new ImagickDraw();
+/*$graphDraw = new ImagickDraw();
 $graphDraw->translate(($width - $simulationWidth) / 2, ($height - $simulationHeight) / 2);
 $graphDraw->setFillColor('#ffffff');
 $graphDraw->setFillOpacity(1);
-$graphDraw->rectangle(0, 0, $simulationWidth, $simulationHeight);
+$graphDraw->rectangle(0, 0, $simulationWidth, $simulationHeight);*/
 
 $image = new Imagick();
 $image->newImage($width, $height, 'white');
+//$image->importImagePixels(0, 0, $width, $height, 'RGB', Imagick::PIXEL_CHAR, $electricPotentialValues);
+//$image->drawImage($graphDraw);
+$image->drawImage($electricFieldDraw);
+$image->drawImage($elementsDraw);
 $image->setImageFormat('png');
-$image->drawImage($graphDraw);
-$image->drawImage($simulationDraw);
 header('Content-Type: image/png');
 echo $image;
 
 function virtualPositionToScreenCoordinates($position)
 {
     global $minimumX, $multiplierX, $simulationHeight, $minimumY, $multiplierY;
-    return array(($position->x - $minimumX) * $multiplierX, $simulationHeight - ($position->y - $minimumY) * $multiplierY);
+    return array(($position->x - $minimumX) * $multiplierX, ($position->y - $minimumY) * $multiplierY);
 }
 
 function screenCoordinatesToVirtualPosition($x, $y)
 {
     global $minimumX, $multiplierX, $simulationHeight, $minimumY, $multiplierY;
-    return new Point($x / $multiplierX + $minimumX, ($simulationHeight - $y) / $multiplierY + $minimumY);
+    return new Point($x / $multiplierX + $minimumX, $y / $multiplierY + $minimumY);
 }
 
 function interpolate($startingValue, $endingValue, $t)
