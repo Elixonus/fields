@@ -346,8 +346,8 @@ class CircularArcFlashlight
 }
 
 $elementaryCharge = 1.6021E-19;
-$maxIterationsPerFieldLine = 100;
-$stepPerIteration = 0.01;
+$maxIterationsPerFieldLine = 500;
+$stepPerIteration = 0.001;
 
 $width = 1000;
 $height = 1000;
@@ -513,6 +513,7 @@ for($c = 0; $c < count($charges); $c++)
 
 $elementsDraw->setStrokeLineCap(Imagick::LINECAP_SQUARE);
 $elementsDraw->setFillOpacity(0);
+$elementsDraw->setFillColor('black');
 
 for($f = 0; $f < count($flashlights); $f++)
 {
