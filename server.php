@@ -261,7 +261,7 @@ class LineSegmentCharge
             return new Point(0, 0);
         }
         
-        $distanceToProjection = sqrt($squaredDistanceToEndpoint1 - pow($relativePositionEndpoint1, 2));
+        $distanceToProjection = sqrt(abs($squaredDistanceToEndpoint1 - pow($relativePositionEndpoint1, 2)));
         $chargeDensity = $this->charge / $distanceBetweenEndpoints;
         
         $electricFieldII = 8.9875517923E9 * $chargeDensity * (1 / $distanceToEndpoint2 - 1 / $distanceToEndpoint1);
@@ -305,7 +305,7 @@ class LineSegmentCharge
             return 0;
         }
         
-        $distanceToProjection = sqrt($squaredDistanceToEndpoint1 - pow($relativePositionEndpoint1, 2));
+        $distanceToProjection = sqrt(abs($squaredDistanceToEndpoint1 - pow($relativePositionEndpoint1, 2)));
         $chargeDensity = $this->charge / $distanceBetweenEndpoints;
         return (8.9875517923E9 * $chargeDensity * log(($relativePositionEndpoint2 + $distanceToEndpoint2) / ($distanceToEndpoint1 - $relativePositionEndpoint1)));
     }
@@ -346,8 +346,8 @@ class CircularArcFlashlight
 }
 
 $elementaryCharge = 1.6021E-19;
-$maxIterationsPerFieldLine = 1000;
-$stepPerIteration = 0.005;
+$maxIterationsPerFieldLine = 100;
+$stepPerIteration = 0.01;
 
 $width = 1000;
 $height = 1000;
@@ -360,9 +360,8 @@ $maximumY = 1;
 $multiplierX = $simulationWidth / ($maximumX - $minimumX);
 $multiplierY = $simulationHeight / ($maximumY - $minimumY);
 
-//$charges = array(new PointCharge(2E-6, new Point(0.3, 0.5)), new PointCharge(-2E-6, new Point(0.7, 0.5)));
-$charges = array(new LineSegmentCharge(35, new Point(0.4, 0.4), new Point(0.6, 0.6)));
-$flashlights = array(new CircularArcFlashlight(new Point(0.5, 0.6), 0.4, 0, pi() / 4, 10));
+$charges = array(new LineSegmentCharge($elementaryCharge, new Point(0.4, 0.4), new Point(0.6, 0.6)));
+$flashlights = array(new CircularArcFlashlight(new Point(0.5, 0.5), 0.45, 0, 3/2 * pi(), 30));
 $collection = new Collection($charges, $flashlights);
 
 $electricFieldDraw = new ImagickDraw();
@@ -418,7 +417,6 @@ for($f = 0; $f < count($collection->flashlights); $f++)
                 $fieldLinePosition = $flashlight->position->copy()->addToPolar($flashlight->radius, interpolate($flashlight->startingAngle, $flashlight->endingAngle, ($flashlight->numberOfFieldLines === 1) ? 0.5 : $l1 / ($flashlight->numberOfFieldLines - 1)));
             }
             
-            
             $screenCoordinates = virtualPositionToScreenCoordinates($fieldLinePosition);
             $electricFieldDraw->pathStart();
             $electricFieldDraw->pathMoveToAbsolute($screenCoordinates[0], $screenCoordinates[1]);
@@ -443,6 +441,7 @@ for($f = 0; $f < count($collection->flashlights); $f++)
                 $previousNormalizedFieldAtPoint = $normalizedFieldAtPoint->copy();
                 $fieldLinePosition->addTo($normalizedFieldAtPoint->multiplyBy($stepPerIteration)->multiplyBy($d));
                 $screenCoordinates = virtualPositionToScreenCoordinates($fieldLinePosition);
+                
                 $electricFieldDraw->pathLineToAbsolute($screenCoordinates[0], $screenCoordinates[1]);
             }
             
@@ -514,7 +513,6 @@ for($c = 0; $c < count($charges); $c++)
 
 $elementsDraw->setStrokeLineCap(Imagick::LINECAP_SQUARE);
 $elementsDraw->setFillOpacity(0);
-// imagick bs
 
 for($f = 0; $f < count($flashlights); $f++)
 {
