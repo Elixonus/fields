@@ -124,7 +124,7 @@ class Collection
     
     function addCharge($charge)
     {
-        array_push($this->charges, $charges);
+        array_push($this->charges, $charge);
         return $this;
     }
     
@@ -305,7 +305,6 @@ class LineSegmentCharge
             return 0;
         }
         
-        $distanceToProjection = sqrt(abs($squaredDistanceToEndpoint1 - pow($relativePositionEndpoint1, 2)));
         $chargeDensity = $this->charge / $distanceBetweenEndpoints;
         return (8.9875517923E9 * $chargeDensity * log(($relativePositionEndpoint2 + $distanceToEndpoint2) / ($distanceToEndpoint1 - $relativePositionEndpoint1)));
     }
@@ -321,6 +320,21 @@ class LineSegmentFlashlight
     {
         $this->endpoint1 = $endpoint1;
         $this->endpoint2 = $endpoint2;
+        $this->numberOfFieldLines = $numberOfFieldLines;
+        return $this;
+    }
+}
+
+class CircleFlashlight
+{
+    public $position;
+    public $radius;
+    public $numberOfFieldLines;
+    
+    function __construct($position, $radius, $numberOfFieldLines)
+    {
+        $this->position = $position;
+        $this->radius = $radius;
         $this->numberOfFieldLines = $numberOfFieldLines;
         return $this;
     }
@@ -346,7 +360,7 @@ class CircularArcFlashlight
 }
 
 $elementaryCharge = 1.6021E-19;
-$maxIterationsPerFieldLine = 500;
+$maxIterationsPerFieldLine = 700;
 $stepPerIteration = 0.001;
 
 $width = 1000;
@@ -360,14 +374,13 @@ $maximumY = 1;
 $multiplierX = $simulationWidth / ($maximumX - $minimumX);
 $multiplierY = $simulationHeight / ($maximumY - $minimumY);
 
-$charges = array(new LineSegmentCharge($elementaryCharge, new Point(0.4, 0.4), new Point(0.6, 0.6)));
-$flashlights = array(new CircularArcFlashlight(new Point(0.5, 0.5), 0.45, 0, 3/2 * pi(), 30));
+$charges = array(new LineSegmentCharge($elementaryCharge, new Point(0.2, 0.4), new Point(0.6, 0.6)), new LineSegmentCharge($elementaryCharge, new Point(0.6, 0.6), new Point(0.6, 0.8)), new PointCharge($elementaryCharge, new Point(0.5, 0.5)));
+$flashlights = array(new LineSegmentFlashlight(new Point(0.7, 0.1), new Point(0.9, 0.2), 10), new CircularArcFlashlight(new Point(0.5, 0.5), 0.45, 0, 3/2 * pi(), 60));
+$flashlights[1] = new CircleFlashlight(new Point(0.5, 0.5), 0.45, 50);
 $collection = new Collection($charges, $flashlights);
 
 $electricFieldDraw = new ImagickDraw();
-$electricFieldDraw->translate($simulationWidth / 2, $simulationHeight / 2);
-$electricFieldDraw->scale(1, -1);
-$electricFieldDraw->translate(-$simulationWidth / 2, -$simulationHeight / 2);
+$electricFieldDraw->affine(array('sx' => 1, 'sy' => -1, 'rx' => 0, 'ry' => 0, 'tx' => 0, 'ty' => $simulationHeight));
 /*$simulationDraw->translate(($width - $simulationWidth) / 2, ($height - $simulationHeight) / 2);
 $simulationDraw->pushClipPath('square');
 $simulationDraw->rectangle(0, 0, $simulationWidth, $simulationHeight);
@@ -412,6 +425,11 @@ for($f = 0; $f < count($collection->flashlights); $f++)
                 $fieldLinePosition = $flashlight->endpoint1->copy()->interpolateToPoint($flashlight->endpoint2, (($flashlight->numberOfFieldLines === 1) ? 0.5 : $l1 / ($flashlight->numberOfFieldLines - 1)));
             }
             
+            else if(get_class($flashlight) === 'CircleFlashlight')
+            {
+                $fieldLinePosition = $flashlight->position->copy()->addToPolar($flashlight->radius, interpolate(0, 2 * pi(), $l1 / $flashlight->numberOfFieldLines));
+            }
+            
             else if(get_class($flashlight) === 'CircularArcFlashlight')
             {
                 $fieldLinePosition = $flashlight->position->copy()->addToPolar($flashlight->radius, interpolate($flashlight->startingAngle, $flashlight->endingAngle, ($flashlight->numberOfFieldLines === 1) ? 0.5 : $l1 / ($flashlight->numberOfFieldLines - 1)));
@@ -451,10 +469,9 @@ for($f = 0; $f < count($collection->flashlights); $f++)
 }
 
 $elementsDraw = new ImagickDraw();
-$elementsDraw->translate($simulationWidth / 2, $simulationHeight / 2);
-$elementsDraw->scale(1, -1);
-$elementsDraw->translate(-$simulationWidth / 2, -$simulationHeight / 2);
+$elementsDraw->affine(array('sx' => 1, 'sy' => -1, 'rx' => 0, 'ry' => 0, 'tx' => 0, 'ty' => $simulationHeight));
 $elementsDraw->setStrokeWidth(3);
+$elementsDraw->setStrokeLineCap(Imagick::LINECAP_ROUND);
 
 for($c = 0; $c < count($charges); $c++)
 {
@@ -513,7 +530,6 @@ for($c = 0; $c < count($charges); $c++)
 
 $elementsDraw->setStrokeLineCap(Imagick::LINECAP_SQUARE);
 $elementsDraw->setFillOpacity(0);
-$elementsDraw->setFillColor('black');
 
 for($f = 0; $f < count($flashlights); $f++)
 {
@@ -529,6 +545,18 @@ for($f = 0; $f < count($flashlights); $f++)
         $elementsDraw->setStrokeColor('yellow');
         $elementsDraw->setStrokeWidth(4);
         $elementsDraw->line($screenPosition1[0], $screenPosition1[1], $screenPosition2[0], $screenPosition2[1]);
+    }
+    
+    if(get_class($flashlight) === 'CircleFlashlight')
+    {
+        $screenPosition1 = virtualPositionToScreenCoordinates($flashlight->position);
+        $screenPosition2 = virtualPositionToScreenCoordinates($flashlight->position->copy()->addToCoordinates($flashlight->radius, 0));
+        $elementsDraw->setStrokeColor('black');
+        $elementsDraw->setStrokeWidth(10);
+        $elementsDraw->circle($screenPosition1[0], $screenPosition1[1], $screenPosition2[0], $screenPosition2[1]);
+        $elementsDraw->setStrokeColor('yellow');
+        $elementsDraw->setStrokeWidth(4);
+        $elementsDraw->circle($screenPosition1[0], $screenPosition1[1], $screenPosition2[0], $screenPosition2[1]);
     }
     
     if(get_class($flashlight) === 'CircularArcFlashlight')
@@ -562,13 +590,13 @@ echo $image;
 
 function virtualPositionToScreenCoordinates($position)
 {
-    global $minimumX, $multiplierX, $simulationHeight, $minimumY, $multiplierY;
+    global $minimumX, $multiplierX, $minimumY, $multiplierY;
     return array(($position->x - $minimumX) * $multiplierX, ($position->y - $minimumY) * $multiplierY);
 }
 
 function screenCoordinatesToVirtualPosition($x, $y)
 {
-    global $minimumX, $multiplierX, $simulationHeight, $minimumY, $multiplierY;
+    global $minimumX, $multiplierX, $minimumY, $multiplierY;
     return new Point($x / $multiplierX + $minimumX, $y / $multiplierY + $minimumY);
 }
 
