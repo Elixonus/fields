@@ -178,6 +178,13 @@ class Collection
             
             else
             {
+                if(is_nan($electricPotential))
+                {
+                    //echo $electricPotential;
+                    
+                    //var_dump($point);
+                }
+                
                 $totalElectricPotential += $electricPotential;
             }
         }
