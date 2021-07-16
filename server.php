@@ -110,71 +110,6 @@ class Point
     }
 }
 
-class Gradient
-{
-    public $colors;
-    public $stops;
-    
-    function __construct($colors, $stops)
-    {
-        $this->colors = $colors;
-        $this->stops = $stops;
-    }
-    
-    function getColor($value)
-    {
-        for($s = 0; $s < count($this->stops); $s++)
-        {
-            $stop = $this->stops[$s];
-            
-            if($value <= $stop)
-            {
-                $color2 = $this->colors[$s];
-                $stop2 = $this->stops[$s];
-                
-                if($s === 0)
-                {
-                    $color1 = $color2;
-                    $stop1 = $stop2;
-                }
-                
-                else
-                {
-                    $color1 = $this->colors[$s - 1];
-                    $stop1 = $this->stops[$s - 1];
-                }
-                
-                break;
-            }
-            
-            else if($s === count($this->stops) - 1)
-            {
-                $color1 = $color2 = $this->colors[count($this->colors) - 1];
-                $stop1 = $stop2 = $this->stops[count($this->stops) - 1];
-            }
-        }
-        
-        if($stop1 == $stop2)
-        {
-            $localValue = 0;
-        }
-        
-        else
-        {
-            $localValue = ($value - $stop1) / ($stop2 - $stop1);
-        }
-        
-        $color = array();
-        
-        for($c = 0; $c < 3; $c++)
-        {
-            array_push($color, interpolate($color1[$c], $color2[$c], $localValue));
-        }
-        
-        return $color;
-    }
-}
-
 class Collection
 {
     public $charges;
@@ -226,29 +161,6 @@ class Collection
         
         return $totalElectricField;
     }
-    
-    function getElectricPotentialAtPoint($point)
-    {
-        $totalElectricPotential = 0;
-        
-        for($c = 0; $c < count($this->charges); $c++)
-        {
-            $charge = $this->charges[$c];
-            $electricPotential = $charge->getElectricPotentialAtPoint($point);
-            
-            if(abs($electricPotential) === INF)
-            {
-                return $electricPotential;
-            }
-            
-            else
-            {
-                $totalElectricPotential += $electricPotential;
-            }
-        }
-        
-        return $totalElectricPotential;
-    }
 }
 
 class PointCharge
@@ -277,21 +189,6 @@ class PointCharge
             $direction = $this->position->getDirectionTo($point);
             $magnitude = 8.9875517923E9 * $this->charge / pow($distanceToPoint, 2);
             return Point::fromPolar($magnitude, $direction);
-        }
-    }
-    
-    function getElectricPotentialAtPoint($point)
-    {
-        $distanceToPoint = $this->position->getDistanceTo($point);
-        
-        if($distanceToPoint == 0)
-        {
-            return $this->charge * INF;
-        }
-        
-        else
-        {
-            return 8.9875517923E9 * $this->charge / $distanceToPoint;
         }
     }
 }
@@ -351,49 +248,6 @@ class LineSegmentCharge
             return (new Point($lineSegmentVector->x * $electricFieldII + $lineSegmentVector->y * $electricFieldT, $lineSegmentVector->y * $electricFieldII - $lineSegmentVector->x * $electricFieldT))->divideBy($distanceBetweenEndpoints);
         }
     }
-    
-    function getElectricPotentialAtPoint($point)
-    {
-        $lineSegmentVector = $this->endpoint2->copy()->subtractTo($this->endpoint1);
-        $distanceBetweenEndpoints = $lineSegmentVector->getMagnitude();
-        $relativePositionEndpoint1 = ($lineSegmentVector->x * ($this->endpoint1->x - $point->x) + $lineSegmentVector->y * ($this->endpoint1->y - $point->y)) / $distanceBetweenEndpoints;
-        $relativePositionEndpoint2 = $relativePositionEndpoint1 + $distanceBetweenEndpoints;
-        $squaredDistanceToEndpoint1 = $point->getSquaredDistanceTo($this->endpoint1);
-        $squaredDistanceToEndpoint2 = $point->getSquaredDistanceTo($this->endpoint2);
-        $distanceToProjection = sqrt(abs($squaredDistanceToEndpoint1 - pow($relativePositionEndpoint1, 2)));
-        $chargeDensity = $this->charge / $distanceBetweenEndpoints;
-        
-        if($distanceToProjection == 0)
-        {
-            if($relativePositionEndpoint1 < 0 && $relativePositionEndpoint2 < 0)
-            {
-                return 8.9875517923E9 * $chargeDensity * log($relativePositionEndpoint1 / $relativePositionEndpoint2);
-            }
-            
-            if($relativePositionEndpoint1 <= 0 && $relativePositionEndpoint2 >= 0)
-            {
-                return $this->charge * INF;
-            }
-            
-            if($relativePositionEndpoint1 > 0 && $relativePositionEndpoint2 > 0)
-            {
-                return 8.9875517923E9 * $chargeDensity * log($relativePositionEndpoint2 / $relativePositionEndpoint1);
-            }
-        }
-        
-        $distanceToEndpoint1 = sqrt($squaredDistanceToEndpoint1);
-        $distanceToEndpoint2 = sqrt($squaredDistanceToEndpoint2);
-        
-        if($relativePositionEndpoint1 < 0 && $relativePositionEndpoint2 < 0)
-        {
-            return -8.9875517923E9 * $chargeDensity * log(abs(($distanceToEndpoint2 - $relativePositionEndpoint2) / ($distanceToEndpoint1 - $relativePositionEndpoint1)));
-        }
-        
-        else
-        {
-            return 8.9875517923E9 * $chargeDensity * log(abs(($relativePositionEndpoint2 + $distanceToEndpoint2) / ($relativePositionEndpoint1 + $distanceToEndpoint1)));
-        }
-    }
 }
 
 class LineSegmentFlashlight
@@ -445,13 +299,254 @@ class CircularArcFlashlight
     }
 }
 
-$elementaryCharge = 1.6021E-19;
-$maxIterationsPerFieldLine = 2000;
+if(!empty(file_get_contents('php://input')))
+{
+    $data = json_decode(file_get_contents('php://input'));
+    
+    if(json_last_error() === JSON_ERROR_NONE)
+    {
+        if(property_exists($data, 'input') && property_exists($data, 'output'))
+        {
+            $dataInput = $data->input;
+            $dataOutput = $data->output;
+            
+            if(property_exists($dataInput, 'charges') && property_exists($dataInput, 'flashlights') && property_exists($dataOutput, 'maximumIterationsPerFieldLine') && property_exists($dataOutput, 'stepPerIteration') && property_exists($dataOutput, 'minimumX') && property_exists($dataOutput, 'minimumY') && property_exists($dataOutput, 'maximumX') && property_exists($dataOutput, 'maximumY'));
+            {
+                $dataCharges = $dataInput->charges;
+                $dataFlashlights = $dataInput->flashlights;
+                $dataMaximumIterationsPerFieldLine = $dataOutput->maximumIterationsPerFieldLine;
+                $dataStepPerIteration = $dataOutput->stepPerIteration;
+                $dataMinimumX = $dataOutput->minimumX;
+                $dataMinimumY = $dataOutput->minimumY;
+                $dataMaximumX = $dataOutput->maximumX;
+                $dataMaximumY = $dataOutput->maximumY;
+                
+                if(is_array($dataCharges) && is_array($dataFlashlights) && is_int($dataMaximumIterationsPerFieldLine) && (is_int($dataStepPerIteration) || is_float($dataStepPerIteration)) && (is_int($dataMinimumX) || is_float($dataMinimumX)) && (is_int($dataMinimumY) || is_float($dataMinimumY)) && (is_int($dataMaximumX) || is_float($dataMaximumX)) && (is_int($dataMaximumY) || is_float($dataMaximumY)))
+                {
+                    $dataChargesValid = true;
+                    
+                    for($c = 0; $c < count($dataCharges); $c++)
+                    {
+                        $dataCharge = $dataCharges[$c];
+                        
+                        if(property_exists($dataCharge, 'type') && property_exists($dataCharge, 'charge'))
+                        {
+                            $dataType = $dataCharge->type;
+                            $dataChargeValid = false;
+                            
+                            if($dataType === 'Point')
+                            {
+                                if(property_exists($dataCharge, 'position'))
+                                {
+                                    $dataPosition = $dataCharge->position;
+                                    
+                                    if(property_exists($dataPosition, 'x') && property_exists($dataPosition, 'y'))
+                                    {
+                                        if((is_int($dataPosition->x) || is_float($dataPosition->x)) && (is_int($dataPosition->y) || is_float($dataPosition->y)))
+                                        {
+                                            $dataChargeValid = true;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            else if($dataType === 'Line Segment')
+                            {
+                                if(property_exists($dataCharge, 'endpoint1') && property_exists($dataCharge, 'endpoint2'))
+                                {
+                                    $dataEndpoint1 = $dataCharge->endpoint1;
+                                    $dataEndpoint2 = $dataCharge->endpoint2;
+                                    
+                                    if(property_exists($dataEndpoint1, 'x') && property_exists($dataEndpoint1, 'y') && property_exists($dataEndpoint2, 'x') && property_exists($dataEndpoint2, 'y'))
+                                    {
+                                        if((is_int($dataEndpoint1->x) || is_float($dataEndpoint1->x)) && (is_int($dataEndpoint1->y) || is_float($dataEndpoint1->y)) && (is_int($dataEndpoint2->x) || is_float($dataEndpoint2->x)) && (is_int($dataEndpoint2->y) || is_float($dataEndpoint2->y)) && ($dataEndpoint1->x != $dataEndpoint2->x || $dataEndpoint1->y != $dataEndpoint2->y))
+                                        {
+                                            $dataChargeValid = true;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            if($dataChargeValid)
+                            {
+                                $dataChargeValue = $dataCharge->charge;
+                                
+                                if((is_int($dataChargeValue) || is_float($dataChargeValue)))
+                                {
+                                    continue;
+                                }
+                            }
+                        }
+                        
+                        $dataChargesValid = false;
+                        break;
+                    }
+                    
+                    if($dataChargesValid && $dataMaximumIterationsPerFieldLine >= 0 && $dataStepPerIteration > 0 && $dataMinimumX < $dataMaximumX && $dataMinimumY < $dataMaximumY)
+                    {
+                        $dataFlashlightsValid = true;
+                        
+                        for($f = 0; $f < count($dataFlashlights); $f++)
+                        {
+                            $dataFlashlight = $dataFlashlights[$f];
+                            
+                            if(property_exists($dataFlashlight, 'type') && property_exists($dataFlashlight, 'numberOfFieldLines'))
+                            {
+                                $dataType = $dataFlashlight->type;
+                                $dataFlashlightValid = false;
+                                
+                                if($dataType === 'Line Segment')
+                                {
+                                    if(property_exists($dataFlashlight, 'endpoint1') && property_exists($dataFlashlight, 'endpoint2'))
+                                    {
+                                        $dataEndpoint1 = $dataFlashlight->endpoint1;
+                                        $dataEndpoint2 = $dataFlashlight->endpoint2;
+                                        
+                                        if(property_exists($dataEndpoint1, 'x') && property_exists($dataEndpoint1, 'y') && property_exists($dataEndpoint2, 'x') && property_exists($dataEndpoint2, 'y'))
+                                        {
+                                            if((is_int($dataEndpoint1->x) || is_float($dataEndpoint1->x)) && (is_int($dataEndpoint1->y) || is_float($dataEndpoint1->y)) && (is_int($dataEndpoint2->x) || is_float($dataEndpoint2->x)) && (is_int($dataEndpoint2->y) || is_float($dataEndpoint2->y)) && ($dataEndpoint1->x != $dataEndpoint2->x || $dataEndpoint1->y != $dataEndpoint2->y))
+                                            {
+                                                $dataFlashlightValid = true;
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                else if($dataType === 'Circle')
+                                {
+                                    if(property_exists($dataFlashlight, 'position') && property_exists($dataFlashlight, 'radius'))
+                                    {
+                                        $dataPosition = $dataFlashlight->position;
+                                        $dataRadius = $dataFlashlight->radius;
+                                        
+                                        if(property_exists($dataPosition, 'x') && property_exists($dataPosition, 'y') && (is_int($dataRadius) || is_float($dataRadius)))
+                                        {
+                                            if((is_int($dataPosition->x) || is_float($dataPosition->x)) && (is_int($dataPosition->y) || is_float($dataPosition->y)) && $dataRadius > 0)
+                                            {
+                                                $dataFlashlightValid = true;
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                else if($dataType === 'Circular Arc')
+                                {
+                                    if(property_exists($dataFlashlight, 'position') && property_exists($dataFlashlight, 'radius') && property_exists($dataFlashlight, 'startingAngle') && property_exists($dataFlashlight, 'endingAngle'))
+                                    {
+                                        $dataPosition = $dataFlashlight->position;
+                                        $dataRadius = $dataFlashlight->radius;
+                                        $dataStartingAngle = $dataFlashlight->startingAngle;
+                                        $dataEndingAngle = $dataFlashlight->endingAngle;
+                                        
+                                        if(property_exists($dataPosition, 'x') && property_exists($dataPosition, 'y') && (is_int($dataRadius) || is_float($dataRadius)) && (is_int($dataStartingAngle) || is_float($dataStartingAngle)) && (is_int($dataEndingAngle) || is_float($dataEndingAngle)))
+                                        {
+                                            if((is_int($dataPosition->x) || is_float($dataPosition->x)) && (is_int($dataPosition->y) || is_float($dataPosition->y)) && $dataRadius > 0 && $dataStartingAngle >= 0 && $dataEndingAngle <= 360 && $dataStartingAngle < $dataEndingAngle)
+                                            {
+                                                $dataFlashlightValid = true;
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                if($dataFlashlightValid)
+                                {
+                                    $dataNumberOfFieldLines = $dataFlashlight->numberOfFieldLines;
+                                    
+                                    if(is_int($dataNumberOfFieldLines))
+                                    {
+                                        if($dataNumberOfFieldLines >= 0)
+                                        {
+                                            continue;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            $dataFlashlightsValid = false;
+                            break;
+                        }
+                        
+                        if($dataFlashlightsValid)
+                        {
+                            $charges = array();
+                            
+                            for($c = 0; $c < count($dataCharges); $c++)
+                            {
+                                $dataCharge = $dataCharges[$c];
+                                
+                                if($dataCharge->type === 'Point')
+                                {
+                                    $charge = new PointCharge($dataCharge->charge, new Point($dataCharge->position->x, $dataCharge->position->y));
+                                }
+                                
+                                else if($dataCharge->type === 'Line Segment')
+                                {
+                                    $charge = new LineSegmentCharge($dataCharge->charge, new Point($dataCharge->endpoint1->x, $dataCharge->endpoint1->y), new Point($dataCharge->endpoint2->x, $dataCharge->endpoint2->y));
+                                }
+                                
+                                array_push($charges, $charge);
+                            }
+                            
+                            $flashlights = array();
+                            
+                            for($f = 0; $f < count($dataFlashlights); $f++)
+                            {
+                                $dataFlashlight = $dataFlashlights[$f];
+                                
+                                if($dataFlashlight->type === 'Line Segment')
+                                {
+                                    $flashlight = new LineSegmentFlashlight(new Point($dataFlashlight->endpoint1->x, $dataFlashlight->endpoint1->y), new Point($dataFlashlight->endpoint2->x, $dataFlashlight->endpoint2->y), $dataFlashlight->numberOfFieldLines);
+                                }
+                                
+                                else if($dataFlashlight->type === 'Circle')
+                                {
+                                    $flashlight = new CircleFlashlight(new Point($dataFlashlight->position->x, $dataFlashlight->position->y), $dataFlashlight->radius, $dataFlashlight->numberOfFieldLines);
+                                }
+                                
+                                else if($dataFlashlight->type === 'Circular Arc')
+                                {
+                                    $flashlight = new CircularArcFlashlight(new Point($dataFlashlight->position->x, $dataFlashlight->position->y), $dataFlashlight->radius, pi() / 180 * $dataFlashlight->startingAngle, pi() / 180 * $dataFlashlight->endingAngle, $dataFlashlight->numberOfFieldLines);
+                                }
+                                
+                                array_push($flashlights, $flashlight);
+                            }
+                            
+                            $maximumIterationsPerFieldLine = $dataMaximumIterationsPerFieldLine;
+                            $stepPerIteration = $dataStepPerIteration;
+                            $minimumX = $dataMinimumX;
+                            $minimumY = $dataMinimumY;
+                            $maximumX = $dataMaximumX;
+                            $maximumY = $dataMaximumY;
+    
+                            var_dump($charges);
+                            echo '<br>';
+                            var_dump($flashlights);
+                            echo '<br>';
+                            echo($maximumIterationsPerFieldLine);
+                            echo '<br>';
+                            echo($stepPerIteration);
+                            echo '<br>';
+                            echo($minimumX);
+                            echo '<br>';
+                            echo($minimumY);
+                            echo '<br>';
+                            echo($maximumX);
+                            echo '<br>';
+                            echo($maximumY);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+/*$maximumIterationsPerFieldLine = 2000;
 $stepPerIteration = 0.1;
-
-
-$electricPotentialGradient = new Gradient(array(array(0, 0, 200), array(0, 0, 255), array(0, 255, 255), array(255, 255, 0), array(255, 0, 0), array(200, 0, 0)), array(0, 0.1, 0.3666, 0.6333, 0.9, 1));
-
 
 $width = 1000;
 $height = 1000;
@@ -462,12 +557,9 @@ $maximumY = 80;
 $multiplierX = $width / ($maximumX - $minimumX);
 $multiplierY = $height / ($maximumY - $minimumY);
 
-$charges = array(new LineSegmentCharge(-$elementaryCharge, new Point(-20, -40), new Point(-20, 40)), new LineSegmentCharge($elementaryCharge, new Point(20, -40), new Point(20, 40)));
+$charges = array(new LineSegmentCharge(-1.6021E-19, new Point(-20, -40), new Point(-20, 40)), new LineSegmentCharge(1.6021E-19, new Point(20, -40), new Point(20, 40)));
 $flashlights = array(new CircleFlashlight(new Point(0, 0), 70, 30), new LineSegmentFlashlight(new Point(0, -60), new Point(0, 60), 20));
 $collection = new Collection($charges, $flashlights);
-
-$image = new Imagick();
-$image->newImage(4000, 1000, 'white');
 
 $electricFieldDraw = new ImagickDraw();
 $electricFieldDraw->affine(array('sx' => 1, 'sy' => -1, 'rx' => 0, 'ry' => 0, 'tx' => 0, 'ty' => $height));
@@ -501,7 +593,7 @@ for($f = 0; $f < count($collection->flashlights); $f++)
             $electricFieldDraw->pathStart();
             $electricFieldDraw->pathMoveToAbsolute($screenCoordinates[0], $screenCoordinates[1]);
             
-            for($l = 0; $l < $maxIterationsPerFieldLine; $l++)
+            for($l = 0; $l < $maximumIterationsPerFieldLine; $l++)
             {
                 $fieldAtPoint = $collection->getElectricFieldVectorAtPoint($fieldLinePosition);
                 
@@ -531,9 +623,10 @@ for($f = 0; $f < count($collection->flashlights); $f++)
     }
 }
 
-$electricFieldImage = new Imagick();
-$electricFieldImage->newImage($width, $height, 'white');
-$electricFieldImage->drawImage($electricFieldDraw);
+$image = new Imagick();
+$image->newImage($width, $height, 'white');
+$image->setImageFormat('png');
+$image->drawImage($electricFieldDraw);
 $electricFieldDraw->clear();
 $elementsDraw = new ImagickDraw();
 $elementsDraw->affine(array('sx' => 1, 'sy' => -1, 'rx' => 0, 'ry' => 0, 'tx' => 0, 'ty' => $height));
@@ -639,61 +732,8 @@ for($f = 0; $f < count($flashlights); $f++)
     }
 }
 
-$electricFieldImage->drawImage($elementsDraw);
+$image->drawImage($elementsDraw);
 $elementsDraw->clear();
-
-
-
-
-
-
-
-$electricPotentialImage = new Imagick();
-$electricPotentialImage->newImage($width, $height, 'white');
-
-$electricPotentialValues = array();
-
-$a = 3E10;
-
-for($y = $height; $y > 0; $y--)
-{
-    for($x = 0; $x < $width; $x++)
-    {
-        $electricPotential = $collection->getElectricPotentialAtPoint(screenCoordinatesToVirtualPosition($x + 0.5, $y + 0.5));
-        
-        if($electricPotential < 0)
-        {
-            $electricPotentialTransformed = 1 / (2 * exp(-$a * $electricPotential));
-        }
-        
-        else
-        {
-            $electricPotentialTransformed = 1 - 1 / (2 * exp($a * $electricPotential));
-        }
-        
-        $electricPotentialPixel = $electricPotentialGradient->getColor($electricPotentialTransformed);
-        array_push($electricPotentialValues, $electricPotentialPixel[0], $electricPotentialPixel[1], $electricPotentialPixel[2]);
-    }
-}
-
-$electricPotentialImage->importImagePixels(0, 0, $width, $height, 'RGB', Imagick::PIXEL_CHAR, $electricPotentialValues);
-
-
-
-
-
-
-
-
-
-
-
-
-$image->compositeImage($electricFieldImage, Imagick::COMPOSITE_DEFAULT, 0, 0);
-$image->compositeImage($electricPotentialImage, Imagick::COMPOSITE_DEFAULT, 1000, 0);
-$image->compositeImage($electricFieldImage, Imagick::COMPOSITE_DEFAULT, 2000, 0);
-$electricFieldImage->clear();
-$image->setImageFormat('png');
 header('Content-Type: image/png');
 echo $image;
 
@@ -703,15 +743,9 @@ function virtualPositionToScreenCoordinates($position)
     return array(($position->x - $minimumX) * $multiplierX, ($position->y - $minimumY) * $multiplierY);
 }
 
-function screenCoordinatesToVirtualPosition($x, $y)
-{
-    global $minimumX, $multiplierX, $minimumY, $multiplierY;
-    return new Point($x / $multiplierX + $minimumX, $y / $multiplierY + $minimumY);
-}
-
 function interpolate($startingValue, $endingValue, $value)
 {
     return ($startingValue + ($endingValue - $startingValue) * $value);
-}
+}*/
 
 ?>
