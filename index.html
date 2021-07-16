@@ -1,0 +1,223 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Electric Field</title>
+        <link rel="icon" href="/favicon.ico" type="image/x-icon">
+        <link rel="stylesheet" href="./libraries/all.css">
+    </head>
+    
+    <body>
+        <h1>Electric Field Simulation</h1>
+        <label>Choose a charge configuration:</label>
+        <select id="select"></select>
+        <br>
+        <br>
+        <textarea id="input" rows="10" cols="80" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+        <br>
+        <br>
+        <button id="button" type="button"><i id="spinner" class="fas fa-sync-alt" style="animation-play-state: paused;"></i> Submit</button>
+        <br>
+        <br>
+        <img id="image" style="display: none;">
+        <p id="info"></p>
+        
+        <style>
+        
+            *
+            {
+                color: white;
+            }
+            
+            body
+            {
+                background-color: black;
+            }
+            
+            #select, #input, #button
+            {
+                background-color: #292a32;
+                border: none;
+                outline: none;
+            }
+            
+            #input
+            {
+                font-family: "Roboto Monoto";
+                padding: 5px;
+            }
+            
+            #button
+            {
+                font-family: "Noto Sans";
+                cursor: pointer;
+                border-radius: 5px;
+                padding: 10px;
+                transform: perspective(1px) translateZ(0);
+                transition: transform 0.3s;
+            }
+            
+            #button:hover
+            {
+                background-image: linear-gradient(225deg, #f25d52, #f2b450);
+                box-shadow: 0 5px 15px #7d3b13;
+                transform: scale(1.05);
+            }
+            
+            #spinner
+            {
+                animation: spin 2s linear infinite;
+            }
+            
+            @keyframes spin
+            {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+            
+            #image
+            {
+                width: 1000px;
+                border-style: dashed;
+                border-width: thick;
+                border-color: #aaaaaa;
+            }
+            
+            #info
+            {
+                font-family: "Noto Sans";
+            }
+            
+            @font-face
+            {
+                font-family: "Roboto Monoto";
+                src: url("./fonts/Roboto Monoto/RobotoMono-Regular.ttf") format("truetype");
+            }
+            
+            @font-face
+            {
+                font-family: "Noto Sans";
+                src: url("./fonts/Noto Sans/NotoSans-Regular.ttf") format("truetype");
+            }
+            
+        </style>
+        
+        <script>
+            
+            var select = document.getElementById("select");
+            var input = document.getElementById("input");
+            var button = document.getElementById("button");
+            var image = document.getElementById("image");
+            var waiting = false;
+            
+            getUses();
+            button.onclick = getImage;
+            getExamples();
+            
+            function getImage()
+            {
+                if(waiting === false)
+                {
+                    waiting = true;
+                    document.getElementById("spinner").style.animationPlayState = "running";
+                    var xhttp = new XMLHttpRequest();
+                    xhttp.onreadystatechange = function()
+                    {
+                        if(this.readyState == 4 && this.status == 200)
+                        {
+                            waiting = false;
+                            document.getElementById("spinner").style.animationPlayState = "paused";
+                            
+                            if(this.responseText.length > 0)
+                            {
+                                image.src = "data:image/png;base64, " + this.responseText;
+                                image.removeAttribute("style");
+                            }
+                            
+                            else
+                            {
+                                image.removeAttribute("src");
+                                image.style.display = "none";
+                            }
+                            
+                            getUses();
+                        }
+                    };
+                    xhttp.open("POST", "./scripts/server.php", true);
+                    xhttp.send(input.value);
+                }
+            }
+            
+            function getUses()
+            {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function()
+                {
+                    if(this.readyState == 4 && this.status == 200)
+                    {
+                        usesLeft = 10 - parseInt(this.responseText);
+                        
+                        if(usesLeft === 0)
+                        {
+                            document.getElementById("info").innerHTML = "You are out of uses for today.";
+                        }
+                        
+                        else if(usesLeft === 1)
+                        {
+                            document.getElementById("info").innerHTML = "You have 1 use left for today.";
+                        }
+                        
+                        else if(usesLeft === 10)
+                        {
+                            document.getElementById("info").innerHTML = "";
+                        }
+                        
+                        else
+                        {
+                            document.getElementById("info").innerHTML = "You have " + usesLeft + " uses left for today.";
+                        }
+                    }
+                };
+                xhttp.open("GET", "./scripts/uses.php", true);
+                xhttp.send();
+            }
+            
+            function getExamples()
+            {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function()
+                {
+                    if(this.readyState == 4 && this.status == 200)
+                    {
+                        var examples = JSON.parse(this.responseText);
+                        
+                        for(var nameOfExample in examples)
+                        {
+                            if(Object.prototype.hasOwnProperty.call(examples, nameOfExample))
+                            {
+                                var example = examples[nameOfExample];
+                                var option = document.createElement("option");
+                                option.value = nameOfExample;
+                                option.innerHTML = nameOfExample;
+                                select.appendChild(option);
+                            }
+                        }
+                        
+                        select.value = "";
+                        select.onchange = function()
+                        {
+                            input.value = JSON.stringify(examples[select.value], null, 2);
+                        }
+                        
+                        input.onchange = function()
+                        {
+                            select.value = "";
+                        }
+                    }
+                };
+                xhttp.open("GET", "./scripts/examples.php", true);
+                xhttp.send();
+            }
+        
+        </script>
+    </body>
+</html>

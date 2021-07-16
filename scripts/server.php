@@ -677,8 +677,7 @@ if(!empty(file_get_contents('php://input')))
                             
                             $image->drawImage($elementsDraw);
                             $elementsDraw->clear();
-                            header('Content-Type: image/png');
-                            echo $image;
+                            echo base64_encode($image->getImageBlob());
                         }
                     }
                 }

@@ -1,0 +1,67 @@
+{
+    "input":
+    {
+        "charges": [
+        {
+            "type": "Point",
+            "charge": 1.6021E-19,
+            "position":
+            {
+                "x": 0.3,
+                "y": 0.3
+            }
+        },
+        {
+            "type": "Point",
+            "charge": 1.6021E-19,
+            "position":
+            {
+                "x": 0.7,
+                "y": 0.3
+            }
+        },
+        {
+            "type": "Point",
+            "charge": -1.6021E-19,
+            "position":
+            {
+                "x": 0.6,
+                "y": 0.7
+            }
+        }],
+        "flashlights": [
+        {
+            "type": "Circle",
+            "position":
+            {
+                "x": 0.5,
+                "y": 0.5
+            },
+            "radius": 0.45,
+            "numberOfFieldLines": 30
+        },
+        {
+            "type": "Line Segment",
+            "endpoint1":
+            {
+                "x": 0.1,
+                "y": 0.6
+            },
+            "endpoint2":
+            {
+                "x": 0.9,
+                "y": 0.5
+            },
+            "numberOfFieldLines": 10
+        }]
+    },
+    "output":
+    {
+        "maximumIterationsPerFieldLine": 1500,
+        "stepPerIteration": 0.002,
+        "minimumX": 0,
+        "minimumY": 0,
+        "maximumX": 1,
+        "maximumY": 1
+    }
+}
