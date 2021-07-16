@@ -110,6 +110,71 @@ class Point
     }
 }
 
+class Gradient
+{
+    public $colors;
+    public $stops;
+    
+    function __construct($colors, $stops)
+    {
+        $this->colors = $colors;
+        $this->stops = $stops;
+    }
+    
+    function getColor($value)
+    {
+        for($s = 0; $s < count($this->stops); $s++)
+        {
+            $stop = $this->stops[$s];
+            
+            if($value <= $stop)
+            {
+                $color2 = $this->colors[$s];
+                $stop2 = $this->stops[$s];
+                
+                if($s === 0)
+                {
+                    $color1 = $color2;
+                    $stop1 = $stop2;
+                }
+                
+                else
+                {
+                    $color1 = $this->colors[$s - 1];
+                    $stop1 = $this->stops[$s - 1];
+                }
+                
+                break;
+            }
+            
+            else if($s === count($this->stops) - 1)
+            {
+                $color1 = $color2 = $this->colors[count($this->colors) - 1];
+                $stop1 = $stop2 = $this->stops[count($this->stops) - 1];
+            }
+        }
+        
+        if($stop1 == $stop2)
+        {
+            $localValue = 0;
+        }
+        
+        else
+        {
+            $localValue = ($value - $stop1) / ($stop2 - $stop1);
+        }
+        
+        $color = array();
+        
+        for($c = 0; $c < 3; $c++)
+        {
+            array_push($color, interpolate($color1[$c], $color2[$c], $localValue));
+        }
+        
+        return $color;
+    }
+}
+
 class Collection
 {
     public $charges;
@@ -384,6 +449,10 @@ $elementaryCharge = 1.6021E-19;
 $maxIterationsPerFieldLine = 2000;
 $stepPerIteration = 0.1;
 
+
+$electricPotentialGradient = new Gradient(array(array(0, 0, 200), array(0, 0, 255), array(0, 255, 255), array(255, 255, 0), array(255, 0, 0), array(200, 0, 0)), array(0, 0.1, 0.3666, 0.6333, 0.9, 1));
+
+
 $width = 1000;
 $height = 1000;
 $minimumX = -80;
@@ -393,14 +462,16 @@ $maximumY = 80;
 $multiplierX = $width / ($maximumX - $minimumX);
 $multiplierY = $height / ($maximumY - $minimumY);
 
-$charges = array(new PointCharge(-$elementaryCharge, new Point(-10, -30)), new LineSegmentCharge(-$elementaryCharge, new Point(-20, -40), new Point(-20, 40)), new LineSegmentCharge($elementaryCharge, new Point(20, -40), new Point(20, 40)));
+$charges = array(new PointCharge($elementaryCharge / 2, new Point(-10, -30)), new LineSegmentCharge(-$elementaryCharge, new Point(-20, -40), new Point(-20, 40)), new LineSegmentCharge($elementaryCharge, new Point(20, -40), new Point(20, 40)));
 $flashlights = array(new CircleFlashlight(new Point(0, 0), 70, 30), new LineSegmentFlashlight(new Point(0, -60), new Point(0, 60), 20));
 $collection = new Collection($charges, $flashlights);
 
 $image = new Imagick();
-$image->newImage($width, $height, 'white');
+$image->newImage(4000, 1000, 'white');
 
-$electricPotentials = array();
+
+
+/*$electricPotentials = array();
 
 for($y = $height; $y > 0; $y--)
 {
@@ -470,7 +541,7 @@ for($p = 0; $p < count($electricPotentials); $p++)
     array_push($colorValues, $get['r'], $get['g'], $get['b']);
 }
 
-$image->importImagePixels(0, 0, $width, $height, 'RGB', Imagick::PIXEL_CHAR, $colorValues);
+$electricFieldImage->importImagePixels(0, 0, $width, $height, 'RGB', Imagick::PIXEL_CHAR, $colorValues);*/
 
 $electricFieldDraw = new ImagickDraw();
 $electricFieldDraw->affine(array('sx' => 1, 'sy' => -1, 'rx' => 0, 'ry' => 0, 'tx' => 0, 'ty' => $height));
@@ -532,7 +603,9 @@ for($f = 0; $f < count($collection->flashlights); $f++)
     }
 }
 
-$image->drawImage($electricFieldDraw);
+$electricFieldImage = new Imagick();
+$electricFieldImage->newImage($width, $height, 'white');
+$electricFieldImage->drawImage($electricFieldDraw);
 $electricFieldDraw->clear();
 $elementsDraw = new ImagickDraw();
 $elementsDraw->affine(array('sx' => 1, 'sy' => -1, 'rx' => 0, 'ry' => 0, 'tx' => 0, 'ty' => $height));
@@ -638,14 +711,63 @@ for($f = 0; $f < count($flashlights); $f++)
     }
 }
 
-$image->drawImage($elementsDraw);
+$electricFieldImage->drawImage($elementsDraw);
 $elementsDraw->clear();
+
+
+
+
+
+
+
+$electricPotentialImage = new Imagick();
+$electricPotentialImage->newImage($width, $height, 'white');
+
+$electricPotentialValues = array();
+
+$a = 3E10;
+
+for($y = $height; $y > 0; $y--)
+{
+    for($x = 0; $x < $width; $x++)
+    {
+        $electricPotential = $collection->getElectricPotentialAtPoint(screenCoordinatesToVirtualPosition($x + 0.5, $y + 0.5));
+        
+        if($electricPotential < 0)
+        {
+            $electricPotentialTransformed = 1 / (2 * exp(-$a * $electricPotential));
+        }
+        
+        else
+        {
+            $electricPotentialTransformed = 1 - 1 / (2 * exp($a * $electricPotential));
+        }
+        
+        $electricPotentialPixel = $electricPotentialGradient->getColor($electricPotentialTransformed);
+        array_push($electricPotentialValues, $electricPotentialPixel[0], $electricPotentialPixel[1], $electricPotentialPixel[2]);
+    }
+}
+
+$electricPotentialImage->importImagePixels(0, 0, $width, $height, 'RGB', Imagick::PIXEL_CHAR, $electricPotentialValues);
+
+
+
+
+
+
+
+
+
+
+
+
+$image->compositeImage($electricFieldImage, Imagick::COMPOSITE_DEFAULT, 0, 0);
+$image->compositeImage($electricPotentialImage, Imagick::COMPOSITE_DEFAULT, 1000, 0);
+$image->compositeImage($electricFieldImage, Imagick::COMPOSITE_DEFAULT, 2000, 0);
+$electricFieldImage->clear();
 $image->setImageFormat('png');
 header('Content-Type: image/png');
 echo $image;
-//$lineCharge = $charges[0];
-//echo $lineCharge->getElectricPotentialAtPoint(new Point(-20, 62.4));
-//echo $maximumElectricPotential;
 
 function virtualPositionToScreenCoordinates($position)
 {
@@ -659,9 +781,9 @@ function screenCoordinatesToVirtualPosition($x, $y)
     return new Point($x / $multiplierX + $minimumX, $y / $multiplierY + $minimumY);
 }
 
-function interpolate($startingValue, $endingValue, $t)
+function interpolate($startingValue, $endingValue, $value)
 {
-    return ($startingValue + ($endingValue - $startingValue) * $t);
+    return ($startingValue + ($endingValue - $startingValue) * $value);
 }
 
 ?>
