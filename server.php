@@ -462,86 +462,12 @@ $maximumY = 80;
 $multiplierX = $width / ($maximumX - $minimumX);
 $multiplierY = $height / ($maximumY - $minimumY);
 
-$charges = array(new PointCharge($elementaryCharge / 2, new Point(-10, -30)), new LineSegmentCharge(-$elementaryCharge, new Point(-20, -40), new Point(-20, 40)), new LineSegmentCharge($elementaryCharge, new Point(20, -40), new Point(20, 40)));
+$charges = array(new LineSegmentCharge(-$elementaryCharge, new Point(-20, -40), new Point(-20, 40)), new LineSegmentCharge($elementaryCharge, new Point(20, -40), new Point(20, 40)));
 $flashlights = array(new CircleFlashlight(new Point(0, 0), 70, 30), new LineSegmentFlashlight(new Point(0, -60), new Point(0, 60), 20));
 $collection = new Collection($charges, $flashlights);
 
 $image = new Imagick();
 $image->newImage(4000, 1000, 'white');
-
-
-
-/*$electricPotentials = array();
-
-for($y = $height; $y > 0; $y--)
-{
-    for($x = 0; $x < $width; $x++)
-    {
-        $electricPotential = $collection->getElectricPotentialAtPoint(screenCoordinatesToVirtualPosition($x, $y));
-        array_push($electricPotentials, $electricPotential);
-        
-        
-        if(screenCoordinatesToVirtualPosition($x, $y)->x == -20)
-        {
-            //echo $electricPotential.', '.screenCoordinatesToVirtualPosition($x, $y)->y.'<br>';
-        }
-        
-        
-        
-        if(abs($electricPotential) === INF)
-        {
-            continue;
-        }
-        
-        if($x === 0 && $y === 0)
-        {
-            $minimumElectricPotential = $electricPotential;
-            $maximumElectricPotential = $electricPotential;
-        }
-        
-        else if($electricPotential < $minimumElectricPotential)
-        {
-            $minimumElectricPotential = $electricPotential;
-        }
-        
-        else if($electricPotential > $maximumElectricPotential)
-        {
-            $maximumElectricPotential = $electricPotential;
-        }
-    }
-}
-
-$minimumElectricPotential = -1E-10;
-$maximumElectricPotential = 1E-10;
-$colorValues = array();
-
-$pixel = new ImagickPixel();
-
-for($p = 0; $p < count($electricPotentials); $p++)
-{
-    $electricPotential = $electricPotentials[$p];
-    
-    if($electricPotential === -INF)
-    {
-        $colorValue = 0;
-    }
-    
-    else if($electricPotential === INF)
-    {
-        $colorValue = 255;
-    }
-    
-    else
-    {
-        $colorValue = 255 * max(min(($electricPotential - $minimumElectricPotential) / ($maximumElectricPotential - $minimumElectricPotential), 1), 0);
-    }
-    
-    $pixel->setHSL(-($colorValue / 255) / 2 + 1, 1, 0.5);
-    $get = $pixel->getColor();
-    array_push($colorValues, $get['r'], $get['g'], $get['b']);
-}
-
-$electricFieldImage->importImagePixels(0, 0, $width, $height, 'RGB', Imagick::PIXEL_CHAR, $colorValues);*/
 
 $electricFieldDraw = new ImagickDraw();
 $electricFieldDraw->affine(array('sx' => 1, 'sy' => -1, 'rx' => 0, 'ry' => 0, 'tx' => 0, 'ty' => $height));
@@ -577,12 +503,14 @@ for($f = 0; $f < count($collection->flashlights); $f++)
             
             for($l = 0; $l < $maxIterationsPerFieldLine; $l++)
             {
-                $normalizedFieldAtPoint = $collection->getElectricFieldVectorAtPoint($fieldLinePosition)->normalize();
+                $fieldAtPoint = $collection->getElectricFieldVectorAtPoint($fieldLinePosition);
                 
-                if($normalizedFieldAtPoint === INF)
+                if(($fieldAtPoint->x == 0 && $fieldAtPoint->y == 0) || $fieldAtPoint === INF)
                 {
                     break;
                 }
+                
+                $normalizedFieldAtPoint = $fieldAtPoint->normalize();
                 
                 if($l > 0)
                 {
