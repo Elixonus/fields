@@ -263,6 +263,39 @@ class LineSegmentFlashlight
         $this->numberOfFieldLines = $numberOfFieldLines;
         return $this;
     }
+    
+    function resetRootFieldLinePositions()
+    {
+        unset($this->rootFieldLinePositions);
+    }
+    
+    function getRootFieldLinePosition($fieldLineNumber)
+    {
+        if(isset($this->rootFieldLinePositions))
+        {
+            return $this->rootFieldLinePositions[$fieldLineNumber];
+        }
+        
+        else
+        {
+            return $this->getRootFieldLinePositions()[$fieldLineNumber];
+        }
+    }
+    
+    function getRootFieldLinePositions()
+    {
+        if(!isset($this->rootFieldLinePositions))
+        {
+            $this->rootFieldLinePositions = array();
+            
+            for($p = 0; $p < $this->numberOfFieldLines; $p++)
+            {
+                array_push($this->rootFieldLinePositions, $this->endpoint1->copy()->interpolateToPoint($this->endpoint2, (($this->numberOfFieldLines === 1) ? 0.5 : $p / ($this->numberOfFieldLines - 1))));
+            }
+        }
+        
+        return $this->rootFieldLinePositions;
+    }
 }
 
 class CircleFlashlight
@@ -277,6 +310,39 @@ class CircleFlashlight
         $this->radius = $radius;
         $this->numberOfFieldLines = $numberOfFieldLines;
         return $this;
+    }
+    
+    function resetRootFieldLinePositions()
+    {
+        unset($this->rootFieldLinePositions);
+    }
+    
+    function getRootFieldLinePosition($fieldLineNumber)
+    {
+        if(isset($this->rootFieldLinePositions))
+        {
+            return $this->rootFieldLinePositions[$fieldLineNumber];
+        }
+        
+        else
+        {
+            return $this->getRootFieldLinePositions()[$fieldLineNumber];
+        }
+    }
+    
+    function getRootFieldLinePositions()
+    {
+        if(!isset($this->rootFieldLinePositions))
+        {
+            $this->rootFieldLinePositions = array();
+            
+            for($p = 0; $p < $this->numberOfFieldLines; $p++)
+            {
+                array_push($this->rootFieldLinePositions, $this->position->copy()->addToPolar($this->radius, interpolate(0, 2 * pi(), $p / $this->numberOfFieldLines)));
+            }
+        }
+        
+        return $this->rootFieldLinePositions;
     }
 }
 
@@ -296,6 +362,39 @@ class CircularArcFlashlight
         $this->endingAngle = $endingAngle;
         $this->numberOfFieldLines = $numberOfFieldLines;
         return $this;
+    }
+    
+    function resetRootFieldLinePositions()
+    {
+        unset($this->rootFieldLinePositions);
+    }
+    
+    function getRootFieldLinePosition($fieldLineNumber)
+    {
+        if(isset($this->rootFieldLinePositions))
+        {
+            return $this->rootFieldLinePositions[$fieldLineNumber];
+        }
+        
+        else
+        {
+            return $this->getRootFieldLinePositions()[$fieldLineNumber];
+        }
+    }
+    
+    function getRootFieldLinePositions()
+    {
+        if(!isset($this->rootFieldLinePositions))
+        {
+            $this->rootFieldLinePositions = array();
+            
+            for($p = 0; $p < $this->numberOfFieldLines; $p++)
+            {
+                array_push($this->rootFieldLinePositions, $this->position->copy()->addToPolar($this->radius, interpolate($this->startingAngle, $this->endingAngle, ($this->numberOfFieldLines === 1) ? 0.5 : $p / ($this->numberOfFieldLines - 1))));
+            }
+        }
+        
+        return $this->rootFieldLinePositions;
     }
 }
 
@@ -517,21 +616,7 @@ if(!empty(file_get_contents('php://input')))
                                 {
                                     for($d = 1; $d >= -1; $d -= 2)
                                     {
-                                        if(get_class($flashlight) === 'LineSegmentFlashlight')
-                                        {
-                                            $fieldLinePosition = $flashlight->endpoint1->copy()->interpolateToPoint($flashlight->endpoint2, (($flashlight->numberOfFieldLines === 1) ? 0.5 : $l1 / ($flashlight->numberOfFieldLines - 1)));
-                                        }
-                                        
-                                        else if(get_class($flashlight) === 'CircleFlashlight')
-                                        {
-                                            $fieldLinePosition = $flashlight->position->copy()->addToPolar($flashlight->radius, interpolate(0, 2 * pi(), $l1 / $flashlight->numberOfFieldLines));
-                                        }
-                                        
-                                        else if(get_class($flashlight) === 'CircularArcFlashlight')
-                                        {
-                                            $fieldLinePosition = $flashlight->position->copy()->addToPolar($flashlight->radius, interpolate($flashlight->startingAngle, $flashlight->endingAngle, ($flashlight->numberOfFieldLines === 1) ? 0.5 : $l1 / ($flashlight->numberOfFieldLines - 1)));
-                                        }
-                                        
+                                        $fieldLinePosition = $flashlight->getRootFieldLinePosition($l1)->copy();
                                         $screenCoordinates = virtualPositionToScreenCoordinates($fieldLinePosition);
                                         $electricFieldDraw->pathStart();
                                         $electricFieldDraw->pathMoveToAbsolute($screenCoordinates[0], $screenCoordinates[1]);
