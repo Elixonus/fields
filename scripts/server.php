@@ -573,7 +573,7 @@ if(!empty(file_get_contents('php://input')))
                             $electricFieldDraw->clear();
                             $elementsDraw = new ImagickDraw();
                             $elementsDraw->affine(array('sx' => 1, 'sy' => -1, 'rx' => 0, 'ry' => 0, 'tx' => 0, 'ty' => $height));
-                            $elementsDraw->setStrokeWidth(3);
+                            $elementsDraw->setStrokeLineCap(Imagick::LINECAP_SQUARE);
                             
                             for($c = 0; $c < count($charges); $c++)
                             {
@@ -581,6 +581,7 @@ if(!empty(file_get_contents('php://input')))
                                 
                                 if(get_class($charge) === 'PointCharge')
                                 {
+                                    $screenCoordinates = virtualPositionToScreenCoordinates($charge->position);
                                     $elementsDraw->setFillOpacity(1);
                                     
                                     if($charge->charge < 0)
@@ -601,12 +602,14 @@ if(!empty(file_get_contents('php://input')))
                                         $elementsDraw->setFillColor('#aaaaaa');
                                     }
                                     
-                                    $screenCoordinates = virtualPositionToScreenCoordinates($charge->position);
+                                    $elementsDraw->setStrokeWidth(3);
                                     $elementsDraw->circle($screenCoordinates[0], $screenCoordinates[1], $screenCoordinates[0] + 15, $screenCoordinates[1]);
                                 }
                                 
                                 else if(get_class($charge) === 'LineSegmentCharge')
                                 {
+                                    $screenCoordinates1 = virtualPositionToScreenCoordinates($charge->endpoint1);
+                                    $screenCoordinates2 = virtualPositionToScreenCoordinates($charge->endpoint2);
                                     $elementsDraw->setFillOpacity(0);
                                     
                                     if($charge->charge < 0)
@@ -624,13 +627,29 @@ if(!empty(file_get_contents('php://input')))
                                         $elementsDraw->setStrokeColor('#888888');
                                     }
                                     
-                                    $screenCoordinates1 = virtualPositionToScreenCoordinates($charge->endpoint1);
-                                    $screenCoordinates2 = virtualPositionToScreenCoordinates($charge->endpoint2);
+                                    $elementsDraw->setStrokeWidth(8);
+                                    $elementsDraw->line($screenCoordinates1[0], $screenCoordinates1[1], $screenCoordinates2[0], $screenCoordinates2[1]);
+                                    
+                                    if($charge->charge < 0)
+                                    {
+                                        $elementsDraw->setStrokeColor('#6666ff');
+                                    }
+                                    
+                                    else if($charge->charge > 0)
+                                    {
+                                        $elementsDraw->setStrokeColor('#ff6666');
+                                    }
+                                    
+                                    else
+                                    {
+                                        $elementsDraw->setStrokeColor('#aaaaaa');
+                                    }
+                                    
+                                    $elementsDraw->setStrokeWidth(3);
                                     $elementsDraw->line($screenCoordinates1[0], $screenCoordinates1[1], $screenCoordinates2[0], $screenCoordinates2[1]);
                                 }
                             }
                             
-                            $elementsDraw->setStrokeLineCap(Imagick::LINECAP_SQUARE);
                             $elementsDraw->setFillOpacity(0);
                             $elementsDraw->setFillColor('black');
                             
