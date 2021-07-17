@@ -630,17 +630,16 @@ if(!empty(file_get_contents('php://input')))
                                                 break;
                                             }
                                             
-                                            $normalizedFieldAtPoint = $fieldAtPoint->normalize();
-                                            
                                             if($l > 0)
                                             {
-                                                if($previousNormalizedFieldAtPoint->x * $normalizedFieldAtPoint->x + $previousNormalizedFieldAtPoint->y * $normalizedFieldAtPoint->y < 0)
+                                                if($previousFieldAtPoint->x * $fieldAtPoint->x + $previousFieldAtPoint->y * $fieldAtPoint->y < 0)
                                                 {
                                                     break;
                                                 }
                                             }
                                             
-                                            $previousNormalizedFieldAtPoint = $normalizedFieldAtPoint->copy();
+                                            $previousFieldAtPoint = $fieldAtPoint->copy();
+                                            $normalizedFieldAtPoint = $fieldAtPoint->normalize();
                                             $fieldLinePosition->addTo($normalizedFieldAtPoint->multiplyBy($stepPerIteration)->multiplyBy($d));
                                             $screenCoordinates = virtualPositionToScreenCoordinates($fieldLinePosition);
                                             $electricFieldDraw->pathLineToAbsolute($screenCoordinates[0], $screenCoordinates[1]);
