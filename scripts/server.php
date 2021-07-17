@@ -734,22 +734,24 @@ if(!empty(file_get_contents('php://input')))
                                 }
                             }
                             
-                            $elementsDraw->setFillOpacity(0);
+                            $elementsDraw->setStrokeColor('black');
+                            $elementsDraw->setStrokeWidth(2);
+                            $elementsDraw->setStrokeDashArray([5, 10]);
+                            $elementsDraw->setStrokeLineCap(Imagick::LINECAP_BUTT);
                             $elementsDraw->setFillColor('black');
                             
                             for($f = 0; $f < count($flashlights); $f++)
                             {
                                 $flashlight = $flashlights[$f];
+                                $elementsDraw->setStrokeOpacity(1);
+                                $elementsDraw->setStrokeColor('black');
+                                $elementsDraw->setFillOpacity(0);
+                                $elementsDraw->setFillColor('black');
                                 
                                 if(get_class($flashlight) === 'LineSegmentFlashlight')
                                 {
                                     $screenCoordinates1 = virtualPositionToScreenCoordinates($flashlight->endpoint1);
                                     $screenCoordinates2 = virtualPositionToScreenCoordinates($flashlight->endpoint2);
-                                    $elementsDraw->setStrokeColor('black');
-                                    $elementsDraw->setStrokeWidth(10);
-                                    $elementsDraw->line($screenCoordinates1[0], $screenCoordinates1[1], $screenCoordinates2[0], $screenCoordinates2[1]);
-                                    $elementsDraw->setStrokeColor('yellow');
-                                    $elementsDraw->setStrokeWidth(4);
                                     $elementsDraw->line($screenCoordinates1[0], $screenCoordinates1[1], $screenCoordinates2[0], $screenCoordinates2[1]);
                                 }
                                 
@@ -757,11 +759,6 @@ if(!empty(file_get_contents('php://input')))
                                 {
                                     $screenCoordinates1 = virtualPositionToScreenCoordinates($flashlight->position);
                                     $screenCoordinates2 = virtualPositionToScreenCoordinates($flashlight->position->copy()->addToCoordinates($flashlight->radius, $flashlight->radius));
-                                    $elementsDraw->setStrokeColor('black');
-                                    $elementsDraw->setStrokeWidth(10);
-                                    $elementsDraw->ellipse($screenCoordinates1[0], $screenCoordinates1[1], $screenCoordinates2[0] - $screenCoordinates1[0], $screenCoordinates2[1] - $screenCoordinates1[1], 0, 360);
-                                    $elementsDraw->setStrokeColor('yellow');
-                                    $elementsDraw->setStrokeWidth(4);
                                     $elementsDraw->ellipse($screenCoordinates1[0], $screenCoordinates1[1], $screenCoordinates2[0] - $screenCoordinates1[0], $screenCoordinates2[1] - $screenCoordinates1[1], 0, 360);
                                 }
                                 
@@ -769,12 +766,18 @@ if(!empty(file_get_contents('php://input')))
                                 {
                                     $screenCoordinates1 = virtualPositionToScreenCoordinates($flashlight->position->copy()->subtractToCoordinates($flashlight->radius, $flashlight->radius));
                                     $screenCoordinates2 = virtualPositionToScreenCoordinates($flashlight->position->copy()->addToCoordinates($flashlight->radius, $flashlight->radius));
-                                    $elementsDraw->setStrokeColor('black');
-                                    $elementsDraw->setStrokeWidth(10);
                                     $elementsDraw->arc($screenCoordinates1[0], $screenCoordinates1[1], $screenCoordinates2[0], $screenCoordinates2[1], 180 / pi() * $flashlight->startingAngle, 180 / pi() * $flashlight->endingAngle);
-                                    $elementsDraw->setStrokeColor('yellow');
-                                    $elementsDraw->setStrokeWidth(4);
-                                    $elementsDraw->arc($screenCoordinates1[0], $screenCoordinates1[1], $screenCoordinates2[0], $screenCoordinates2[1], 180 / pi() * $flashlight->startingAngle, 180 / pi() * $flashlight->endingAngle);
+                                }
+                                
+                                $elementsDraw->setStrokeOpacity(0);
+                                $elementsDraw->setStrokeColor('black');
+                                $elementsDraw->setFillOpacity(1);
+                                $elementsDraw->setFillColor('black');
+                                
+                                for($p = 0; $p < $flashlight->numberOfFieldLines; $p++)
+                                {
+                                    $screenPosition = virtualPositionToScreenCoordinates($flashlight->getRootFieldLinePosition($p));
+                                    $elementsDraw->circle($screenPosition[0], $screenPosition[1], $screenPosition[0] + 4, $screenPosition[1]);
                                 }
                             }
                             
