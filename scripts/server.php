@@ -198,7 +198,7 @@ class PointCharge
     }
 }
 
-class LineSegmentCharge
+class FiniteLineCharge
 {
     public $charge;
     public $endpoint1;
@@ -214,9 +214,9 @@ class LineSegmentCharge
     
     function getElectricFieldVectorAtPoint($point)
     {
-        $lineSegmentVector = $this->endpoint2->copy()->subtractTo($this->endpoint1);
-        $distanceBetweenEndpoints = $lineSegmentVector->getMagnitude();
-        $relativePositionEndpoint1 = ($lineSegmentVector->x * ($this->endpoint1->x - $point->x) + $lineSegmentVector->y * ($this->endpoint1->y - $point->y)) / $distanceBetweenEndpoints;
+        $lineVector = $this->endpoint2->copy()->subtractTo($this->endpoint1);
+        $distanceBetweenEndpoints = $lineVector->getMagnitude();
+        $relativePositionEndpoint1 = ($lineVector->x * ($this->endpoint1->x - $point->x) + $lineVector->y * ($this->endpoint1->y - $point->y)) / $distanceBetweenEndpoints;
         $relativePositionEndpoint2 = $relativePositionEndpoint1 + $distanceBetweenEndpoints;
         $squaredDistanceToEndpoint1 = $point->getSquaredDistanceTo($this->endpoint1);
         $squaredDistanceToEndpoint2 = $point->getSquaredDistanceTo($this->endpoint2);
@@ -250,14 +250,14 @@ class LineSegmentCharge
             $electricFieldT = 8.9875517923E9 * $chargeDensity / $distanceToProjection * ($relativePositionEndpoint2 / $distanceToEndpoint2 - $relativePositionEndpoint1 / $distanceToEndpoint1);
         }
         
-        if(($point->x - $this->endpoint1->x) * $lineSegmentVector->y < ($point->y - $this->endpoint1->y) * $lineSegmentVector->x)
+        if(($point->x - $this->endpoint1->x) * $lineVector->y < ($point->y - $this->endpoint1->y) * $lineVector->x)
         {
-            return (new Point($lineSegmentVector->x * $electricFieldII - $lineSegmentVector->y * $electricFieldT, $lineSegmentVector->y * $electricFieldII + $lineSegmentVector->x * $electricFieldT))->divideBy($distanceBetweenEndpoints);
+            return (new Point($lineVector->x * $electricFieldII - $lineVector->y * $electricFieldT, $lineVector->y * $electricFieldII + $lineVector->x * $electricFieldT))->divideBy($distanceBetweenEndpoints);
         }
         
         else
         {
-            return (new Point($lineSegmentVector->x * $electricFieldII + $lineSegmentVector->y * $electricFieldT, $lineSegmentVector->y * $electricFieldII - $lineSegmentVector->x * $electricFieldT))->divideBy($distanceBetweenEndpoints);
+            return (new Point($lineVector->x * $electricFieldII + $lineVector->y * $electricFieldT, $lineVector->y * $electricFieldII - $lineVector->x * $electricFieldT))->divideBy($distanceBetweenEndpoints);
         }
     }
 }
@@ -434,7 +434,7 @@ if(!empty(file_get_contents('php://input')))
                 
                 if(is_array($dataCharges) && is_array($dataFlashlights) && is_int($dataMaximumIterationsPerFieldLine) && (is_int($dataStepPerIteration) || is_float($dataStepPerIteration)) && (is_int($dataMinimumX) || is_float($dataMinimumX)) && (is_int($dataMinimumY) || is_float($dataMinimumY)) && (is_int($dataMaximumX) || is_float($dataMaximumX)) && (is_int($dataMaximumY) || is_float($dataMaximumY)))
                 {
-                    if(count($dataCharges) <= 100 && count($dataFlashlights) <= 100 && numberValid($dataStepPerIteration))
+                    if(count($dataCharges) <= 100 && count($dataFlashlights) <= 100 && abs($dataStepPerIteration) <= 1E100)
                     {
                         $dataChargesValid = true;
                         
@@ -454,7 +454,7 @@ if(!empty(file_get_contents('php://input')))
                                         {
                                             if((is_int($dataCharge->position->x) || is_float($dataCharge->position->x)) && (is_int($dataCharge->position->y) || is_float($dataCharge->position->y)))
                                             {
-                                                if(numberValid($dataCharge->position->x) && numberValid($dataCharge->position->y))
+                                                if(abs($dataCharge->position->x) <= 1E100 && abs($dataCharge->position->y) <= 1E100)
                                                 {
                                                     $dataChargeValid = true;
                                                 }
@@ -463,7 +463,7 @@ if(!empty(file_get_contents('php://input')))
                                     }
                                 }
                                 
-                                else if($dataCharge->type === 'Line Segment')
+                                else if($dataCharge->type === 'Finite Line')
                                 {
                                     if(property_exists($dataCharge, 'endpoint1') && property_exists($dataCharge, 'endpoint2'))
                                     {
@@ -471,7 +471,7 @@ if(!empty(file_get_contents('php://input')))
                                         {
                                             if((is_int($dataCharge->endpoint1->x) || is_float($dataCharge->endpoint1->x)) && (is_int($dataCharge->endpoint1->y) || is_float($dataCharge->endpoint1->y)) && (is_int($dataCharge->endpoint2->x) || is_float($dataCharge->endpoint2->x)) && (is_int($dataCharge->endpoint2->y) || is_float($dataCharge->endpoint2->y)) && ($dataCharge->endpoint1->x != $dataCharge->endpoint2->x || $dataCharge->endpoint1->y != $dataCharge->endpoint2->y))
                                             {
-                                                if(numberValid($dataCharge->endpoint1->x) && numberValid($dataCharge->endpoint1->y) && numberValid($dataCharge->endpoint2->x) && numberValid($dataCharge->endpoint2->y))
+                                                if(abs($dataCharge->endpoint1->x) <= 1E100 && abs($dataCharge->endpoint1->y) <= 1E100 && abs($dataCharge->endpoint2->x) <= 1E100 && abs($dataCharge->endpoint2->y) <= 1E100)
                                                 {
                                                     $dataChargeValid = true;
                                                 }
@@ -486,7 +486,7 @@ if(!empty(file_get_contents('php://input')))
                                     
                                     if((is_int($dataChargeValue) || is_float($dataChargeValue)))
                                     {
-                                        if(numberValid($dataChargeValue))
+                                        if(abs($dataChargeValue) <= 1E100)
                                         {
                                             continue;
                                         }
@@ -519,7 +519,7 @@ if(!empty(file_get_contents('php://input')))
                                             {
                                                 if((is_int($dataFlashlight->endpoint1->x) || is_float($dataFlashlight->endpoint1->x)) && (is_int($dataFlashlight->endpoint1->y) || is_float($dataFlashlight->endpoint1->y)) && (is_int($dataFlashlight->endpoint2->x) || is_float($dataFlashlight->endpoint2->x)) && (is_int($dataFlashlight->endpoint2->y) || is_float($dataFlashlight->endpoint2->y)) && ($dataFlashlight->endpoint1->x != $dataFlashlight->endpoint2->x || $dataFlashlight->endpoint1->y != $dataFlashlight->endpoint2->y))
                                                 {
-                                                    if(numberValid($dataFlashlight->endpoint1->x) && numberValid($dataFlashlight->endpoint1->y) && numberValid($dataFlashlight->endpoint2->x) && numberValid($dataFlashlight->endpoint2->y))
+                                                    if(abs($dataFlashlight->endpoint1->x) <= 1E100 && abs($dataFlashlight->endpoint1->y) <= 1E100 && abs($dataFlashlight->endpoint2->x) <= 1E100 && abs($dataFlashlight->endpoint2->y) <= 1E100)
                                                     {
                                                         $dataFlashlightValid = true;
                                                     }
@@ -536,7 +536,7 @@ if(!empty(file_get_contents('php://input')))
                                             {
                                                 if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)) && $dataFlashlight->radius > 0)
                                                 {
-                                                    if(numberValid($dataFlashlight->position->x) && numberValid($dataFlashlight->position->y) && numberValid($dataFlashlight->radius))
+                                                    if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && abs($dataFlashlight->radius) <= 1E100)
                                                     {
                                                         $dataFlashlightValid = true;
                                                     }
@@ -553,7 +553,7 @@ if(!empty(file_get_contents('php://input')))
                                             {
                                                 if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)) && $dataFlashlight->radius > 0 && $dataFlashlight->startingAngle >= 0 && $dataFlashlight->endingAngle <= 360 && $dataFlashlight->startingAngle < $dataFlashlight->endingAngle)
                                                 {
-                                                    if(numberValid($dataFlashlight->position->x) && numberValid($dataFlashlight->position->y) && numberValid($dataFlashlight->radius))
+                                                    if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && abs($dataFlashlight->radius) <= 1E100)
                                                     {
                                                         $dataFlashlightValid = true;
                                                     }
@@ -592,9 +592,9 @@ if(!empty(file_get_contents('php://input')))
                                         $charge = new PointCharge($dataCharge->charge, new Point($dataCharge->position->x, $dataCharge->position->y));
                                     }
                                     
-                                    else if($dataCharge->type === 'Line Segment')
+                                    else if($dataCharge->type === 'Finite Line')
                                     {
-                                        $charge = new LineSegmentCharge($dataCharge->charge, new Point($dataCharge->endpoint1->x, $dataCharge->endpoint1->y), new Point($dataCharge->endpoint2->x, $dataCharge->endpoint2->y));
+                                        $charge = new FiniteLineCharge($dataCharge->charge, new Point($dataCharge->endpoint1->x, $dataCharge->endpoint1->y), new Point($dataCharge->endpoint2->x, $dataCharge->endpoint2->y));
                                     }
                                     
                                     array_push($charges, $charge);
@@ -645,7 +645,7 @@ if(!empty(file_get_contents('php://input')))
                                 
                                 for($x = 0; $x < $width; $x += 40)
                                 {
-                                    for($y = 40 * (($x / 40) % 2); $y < $height; $y += 80)
+                                    for($y = 40 * ($x / 40 % 2); $y < $height; $y += 80)
                                     {
                                         $backgroundDraw->rectangle($x, $y, $x + 40, $y + 40);
                                     }
@@ -737,7 +737,7 @@ if(!empty(file_get_contents('php://input')))
                                         $elementsDraw->circle($screenCoordinates[0], $screenCoordinates[1], $screenCoordinates[0] + 15, $screenCoordinates[1]);
                                     }
                                     
-                                    else if(get_class($charge) === 'LineSegmentCharge')
+                                    else if(get_class($charge) === 'FiniteLineCharge')
                                     {
                                         $screenCoordinates1 = virtualPositionToScreenCoordinates($charge->endpoint1);
                                         $screenCoordinates2 = virtualPositionToScreenCoordinates($charge->endpoint2);
@@ -804,16 +804,16 @@ if(!empty(file_get_contents('php://input')))
                                     
                                     if(get_class($flashlight) === 'CircleFlashlight')
                                     {
-                                        $screenCoordinates1 = virtualPositionToScreenCoordinates($flashlight->position);
+                                        $screenCoordinates1 = virtualPositionToScreenCoordinates($flashlight->position->copy()->subtractToCoordinates($flashlight->radius, $flashlight->radius));
                                         $screenCoordinates2 = virtualPositionToScreenCoordinates($flashlight->position->copy()->addToCoordinates($flashlight->radius, $flashlight->radius));
-                                        $elementsDraw->ellipse($screenCoordinates1[0], $screenCoordinates1[1], $screenCoordinates2[0] - $screenCoordinates1[0], $screenCoordinates2[1] - $screenCoordinates1[1], 0, 360);
+                                        $elementsDraw->arc(max($screenCoordinates1[0], -100 * $width), max($screenCoordinates1[1], -100 * $height), min($screenCoordinates2[0], 101 * $width), min($screenCoordinates2[1], 101 * $height), 0, 360);
                                     }
                                     
                                     if(get_class($flashlight) === 'CircularArcFlashlight')
                                     {
                                         $screenCoordinates1 = virtualPositionToScreenCoordinates($flashlight->position->copy()->subtractToCoordinates($flashlight->radius, $flashlight->radius));
                                         $screenCoordinates2 = virtualPositionToScreenCoordinates($flashlight->position->copy()->addToCoordinates($flashlight->radius, $flashlight->radius));
-                                        $elementsDraw->arc($screenCoordinates1[0], $screenCoordinates1[1], $screenCoordinates2[0], $screenCoordinates2[1], 180 / pi() * $flashlight->startingAngle, 180 / pi() * $flashlight->endingAngle);
+                                        $elementsDraw->arc(max($screenCoordinates1[0], -100 * $width), max($screenCoordinates1[1], -100 * $height), min($screenCoordinates2[0], 101 * $width), min($screenCoordinates2[1], 101 * $height), 180 / pi() * $flashlight->startingAngle, 180 / pi() * $flashlight->endingAngle);
                                     }
                                     
                                     $elementsDraw->setStrokeOpacity(0);
@@ -1017,12 +1017,6 @@ function getUniqueSortedCDFS($numbers)
     
     return $CDFS;
 }*/
-
-function numberValid($number)
-{
-    $positiveNumber = abs($number);
-    return $positiveNumber <= 1E100;
-}
 
 function interpolate($startingValue, $endingValue, $value)
 {
