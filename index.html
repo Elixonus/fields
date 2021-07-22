@@ -20,13 +20,78 @@
         <br>
         <br>
         <img id="image" style="display: none;">
-        <p id="info"></p>
+        <div class="information">
+            <h1><mark class="highlight">Definitions</mark></h1>
+                <h2 class="tab1">Input: Contains the data that is inputted into the simulation</h2>
+                    <h3 class="tab2">Charges: A list containing data for each electric charge<br></h3>
+                        <p class="tab3">
+                            <mark class="parameter">Type</mark>: Charge type<br>
+                            <mark class="parameter">Charge</mark>: Charge value in coulombs<br><br>
+                            If charge type is set to "Point Charge", these parameters will be used<br>
+                            <mark class="parameter">Position</mark>: X and Y coordinates in meters of the point charge<br><br>
+                            If charge type is set to "Line Charge", these parameters will be used<br>
+                            <mark class="parameter">Endpoint1</mark>: X and Y coordinates in meters of the first endpoint<br>
+                            <mark class="parameter">Endpoint2</mark>: X and Y coordinates in meters of the second endpoint
+                        </p>
+                    <h3 class="tab2">Flashlights: A list containing data for each flashlight that defines the starting position of the field lines</h3>
+                        <p class="tab3">
+                            <mark class="parameter">Type</mark>: Shape type of flashlight<br>
+                            <mark class="parameter">Number of Field Lines</mark>: The number of electric field lines simulated with the flashlight<br><br>
+                            If flashlight type is set to "Line Segment", these parameters will be used<br>
+                            <mark class="parameter">Endpoint1</mark>: X and Y coordinates in meters of the first endpoint<br>
+                            <mark class="parameter">Endpoint2</mark>: X and Y coordinates in meters of the second endpoint<br><br>
+                            If flashlight type is set to "Circle", these parameters will be used<br>
+                            <mark class="parameter">Position</mark>: X and Y coordinates in meters of the center of the circle<br>
+                            <mark class="parameter">Radius</mark>: The radius of the circle<br><br>
+                            If flashlight type is set to "Circular Arc", these parameters will be used<br>
+                            <mark class="parameter">Position</mark>: X and Y coordinates in meters of the center of the arc<br>
+                            <mark class="parameter">Radius</mark>: The radius in meters of the arc<br>
+                            <mark class="parameter">Starting Angle</mark>: The starting angle of the arc in degrees<br>
+                            <mark class="parameter">Ending Angle</mark>: The ending angle of the arc in degrees
+                        </p>
+                <h2 class="tab1">Output: Contains the data that is used for displaying the result</h2>
+                <p class="tab2">
+                    <mark class="parameter">Maximum Iterations Per Field Line</mark>: The maximum number of calculations for each field line to reduce unnecessary computation<br>
+                    <mark class="parameter">Step Per Iteration</mark>: The step traveled by each field line before and after every calculation<br>
+                    <mark class="parameter">MinimumX</mark>: The minimum x-value in meters that is displayed by the viewport<br>
+                    <mark class="parameter">MinimumY</mark>: The minimum y-value in meters that is displayed by the viewport<br>
+                    <mark class="parameter">MaximumX</mark>: The maximum x-value in meters that is displayed by the viewport<br>
+                    <mark class="parameter">MaximumY</mark>: The maximum y-value in meters that is displayed by the viewport
+                </p>
+            <h1><mark class="highlight">Units</mark></h1>
+                <h3 class="tab1">
+                    Charges: <mark class="parameter">Coulombs (C)<br></mark>
+                    Electric Fields: <mark class="parameter">Newtons / Coulomb (N/C)<br></mark>
+                    Distances, Coordinates: <mark class="parameter">meters (m)</mark>
+                </h3>
+            <h1><mark class="highlight">Rules</mark></h1>
+                <h3 class="tab1">
+                    Number of charges is less than or equal to <mark class="parameter">100</mark><br>
+                    Number of flashlights is less than or equal to <mark class="parameter">100</mark><br>
+                    Total Number of Field Lines &#215; Maximum Iterations Per Field Line &#215; Number of Charges is less than or equal to <mark class="parameter">1,000,000</mark>
+                </h3>
+        </div>
         
         <style>
         
             *
             {
                 color: white;
+            }
+            
+            .tab1
+            {
+                margin-left: 40px;
+            }
+            
+            .tab2
+            {
+                margin-left: 80px;
+            }
+            
+            .tab3
+            {
+                margin-left: 120px;
             }
             
             body
@@ -78,14 +143,26 @@
             #image
             {
                 width: 1000px;
-                border-style: dashed;
-                border-width: thick;
-                border-color: #aaaaaa;
+                border-style: double;
+                border-width: 20px;
+                border-color: #ffffff;
             }
             
-            #info
+            .information
             {
                 font-family: "Noto Sans";
+            }
+            
+            .highlight
+            {
+                color: black;
+                background: #ffa040;
+            }
+            
+            .parameter
+            {
+                color: #ffa040;
+                background: none;
             }
             
             @font-face
@@ -110,7 +187,6 @@
             var image = document.getElementById("image");
             var waiting = false;
             
-            getUses();
             button.onclick = getImage;
             getExamples();
             
@@ -139,47 +215,11 @@
                                 image.removeAttribute("src");
                                 image.style.display = "none";
                             }
-                            
-                            getUses();
                         }
                     };
                     xhttp.open("POST", "./scripts/server.php", true);
                     xhttp.send(input.value);
                 }
-            }
-            
-            function getUses()
-            {
-                var xhttp = new XMLHttpRequest();
-                xhttp.onreadystatechange = function()
-                {
-                    if(this.readyState == 4 && this.status == 200)
-                    {
-                        usesLeft = 10 - parseInt(this.responseText);
-                        
-                        if(usesLeft === 0)
-                        {
-                            document.getElementById("info").innerHTML = "You are out of uses for today.";
-                        }
-                        
-                        else if(usesLeft === 1)
-                        {
-                            document.getElementById("info").innerHTML = "You have 1 use left for today.";
-                        }
-                        
-                        else if(usesLeft === 10)
-                        {
-                            document.getElementById("info").innerHTML = "";
-                        }
-                        
-                        else
-                        {
-                            document.getElementById("info").innerHTML = "You have " + usesLeft + " uses left for today.";
-                        }
-                    }
-                };
-                xhttp.open("GET", "./scripts/uses.php", true);
-                xhttp.send();
             }
             
             function getExamples()

@@ -434,7 +434,7 @@ if(!empty(file_get_contents('php://input')))
                 
                 if(is_array($dataCharges) && is_array($dataFlashlights) && is_int($dataMaximumIterationsPerFieldLine) && (is_int($dataStepPerIteration) || is_float($dataStepPerIteration)) && (is_int($dataMinimumX) || is_float($dataMinimumX)) && (is_int($dataMinimumY) || is_float($dataMinimumY)) && (is_int($dataMaximumX) || is_float($dataMaximumX)) && (is_int($dataMaximumY) || is_float($dataMaximumY)))
                 {
-                    if(count($dataCharges) <= 100 && count($dataFlashlights) <= 100)
+                    if(count($dataCharges) <= 100 && count($dataFlashlights) <= 100 && numberValid($dataStepPerIteration))
                     {
                         $dataChargesValid = true;
                         
@@ -454,7 +454,10 @@ if(!empty(file_get_contents('php://input')))
                                         {
                                             if((is_int($dataCharge->position->x) || is_float($dataCharge->position->x)) && (is_int($dataCharge->position->y) || is_float($dataCharge->position->y)))
                                             {
-                                                $dataChargeValid = true;
+                                                if(numberValid($dataCharge->position->x) && numberValid($dataCharge->position->y))
+                                                {
+                                                    $dataChargeValid = true;
+                                                }
                                             }
                                         }
                                     }
@@ -468,7 +471,10 @@ if(!empty(file_get_contents('php://input')))
                                         {
                                             if((is_int($dataCharge->endpoint1->x) || is_float($dataCharge->endpoint1->x)) && (is_int($dataCharge->endpoint1->y) || is_float($dataCharge->endpoint1->y)) && (is_int($dataCharge->endpoint2->x) || is_float($dataCharge->endpoint2->x)) && (is_int($dataCharge->endpoint2->y) || is_float($dataCharge->endpoint2->y)) && ($dataCharge->endpoint1->x != $dataCharge->endpoint2->x || $dataCharge->endpoint1->y != $dataCharge->endpoint2->y))
                                             {
-                                                $dataChargeValid = true;
+                                                if(numberValid($dataCharge->endpoint1->x) && numberValid($dataCharge->endpoint1->y) && numberValid($dataCharge->endpoint2->x) && numberValid($dataCharge->endpoint2->y))
+                                                {
+                                                    $dataChargeValid = true;
+                                                }
                                             }
                                         }
                                     }
@@ -480,7 +486,10 @@ if(!empty(file_get_contents('php://input')))
                                     
                                     if((is_int($dataChargeValue) || is_float($dataChargeValue)))
                                     {
-                                        continue;
+                                        if(numberValid($dataChargeValue))
+                                        {
+                                            continue;
+                                        }
                                     }
                                 }
                             }
@@ -510,7 +519,10 @@ if(!empty(file_get_contents('php://input')))
                                             {
                                                 if((is_int($dataFlashlight->endpoint1->x) || is_float($dataFlashlight->endpoint1->x)) && (is_int($dataFlashlight->endpoint1->y) || is_float($dataFlashlight->endpoint1->y)) && (is_int($dataFlashlight->endpoint2->x) || is_float($dataFlashlight->endpoint2->x)) && (is_int($dataFlashlight->endpoint2->y) || is_float($dataFlashlight->endpoint2->y)) && ($dataFlashlight->endpoint1->x != $dataFlashlight->endpoint2->x || $dataFlashlight->endpoint1->y != $dataFlashlight->endpoint2->y))
                                                 {
-                                                    $dataFlashlightValid = true;
+                                                    if(numberValid($dataFlashlight->endpoint1->x) && numberValid($dataFlashlight->endpoint1->y) && numberValid($dataFlashlight->endpoint2->x) && numberValid($dataFlashlight->endpoint2->y))
+                                                    {
+                                                        $dataFlashlightValid = true;
+                                                    }
                                                 }
                                             }
                                         }
@@ -524,7 +536,10 @@ if(!empty(file_get_contents('php://input')))
                                             {
                                                 if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)) && $dataFlashlight->radius > 0)
                                                 {
-                                                    $dataFlashlightValid = true;
+                                                    if(numberValid($dataFlashlight->position->x) && numberValid($dataFlashlight->position->y) && numberValid($dataFlashlight->radius))
+                                                    {
+                                                        $dataFlashlightValid = true;
+                                                    }
                                                 }
                                             }
                                         }
@@ -538,7 +553,10 @@ if(!empty(file_get_contents('php://input')))
                                             {
                                                 if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)) && $dataFlashlight->radius > 0 && $dataFlashlight->startingAngle >= 0 && $dataFlashlight->endingAngle <= 360 && $dataFlashlight->startingAngle < $dataFlashlight->endingAngle)
                                                 {
-                                                    $dataFlashlightValid = true;
+                                                    if(numberValid($dataFlashlight->position->x) && numberValid($dataFlashlight->position->y) && numberValid($dataFlashlight->radius))
+                                                    {
+                                                        $dataFlashlightValid = true;
+                                                    }
                                                 }
                                             }
                                         }
@@ -999,6 +1017,12 @@ function getUniqueSortedCDFS($numbers)
     
     return $CDFS;
 }*/
+
+function numberValid($number)
+{
+    $positiveNumber = abs($number);
+    return $positiveNumber <= 1E100;
+}
 
 function interpolate($startingValue, $endingValue, $value)
 {
