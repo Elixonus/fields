@@ -25,73 +25,57 @@
                 <h2 class="tab1">Input: Contains the data that is inputted into the simulation</h2>
                     <h3 class="tab2">Charges: A list containing data for each electric charge<br></h3>
                         <p class="tab3">
-                            <mark class="parameter">Type</mark>: Charge type<br>
-                            <mark class="parameter">Charge</mark>: Charge value in coulombs<br><br>
-                            If charge type is set to "Point Charge", these parameters will be used<br>
-                            <mark class="parameter">Position</mark>: X and Y coordinates in meters of the point charge<br><br>
-                            If charge type is set to "Line Charge", these parameters will be used<br>
-                            <mark class="parameter">Endpoint1</mark>: X and Y coordinates in meters of the first endpoint<br>
-                            <mark class="parameter">Endpoint2</mark>: X and Y coordinates in meters of the second endpoint
+                            <mark class="lowlight">Type</mark>: Charge type<br>
+                            <mark class="lowlight">Charge</mark>: Charge value in coulombs<br><br>
+                            If charge type is set to "Point", these parameters will be used<br>
+                            <mark class="lowlight">Position</mark>: X and Y coordinates of the point charge in meters<br><br>
+                            If charge type is set to "Finite Line", these parameters will be used<br>
+                            <mark class="lowlight">Endpoint1</mark>: X and Y coordinates of the first endpoint in meters<br>
+                            <mark class="lowlight">Endpoint2</mark>: X and Y coordinates of the second endpoint in meters
                         </p>
                     <h3 class="tab2">Flashlights: A list containing data for each flashlight that defines the starting position of the field lines</h3>
                         <p class="tab3">
-                            <mark class="parameter">Type</mark>: Shape type of flashlight<br>
-                            <mark class="parameter">Number of Field Lines</mark>: The number of electric field lines simulated with the flashlight<br><br>
+                            <mark class="lowlight">Type</mark>: Shape type of flashlight<br>
+                            <mark class="lowlight">Number of Field Lines</mark>: The number of electric field lines simulated with the flashlight<br><br>
                             If flashlight type is set to "Line Segment", these parameters will be used<br>
-                            <mark class="parameter">Endpoint1</mark>: X and Y coordinates in meters of the first endpoint<br>
-                            <mark class="parameter">Endpoint2</mark>: X and Y coordinates in meters of the second endpoint<br><br>
+                            <mark class="lowlight">Endpoint1</mark>: X and Y coordinates of the first endpoint in meters<br>
+                            <mark class="lowlight">Endpoint2</mark>: X and Y coordinates of the second endpoint in meters<br><br>
                             If flashlight type is set to "Circle", these parameters will be used<br>
-                            <mark class="parameter">Position</mark>: X and Y coordinates in meters of the center of the circle<br>
-                            <mark class="parameter">Radius</mark>: The radius of the circle<br><br>
+                            <mark class="lowlight">Position</mark>: X and Y coordinates of the center of the circle in meters<br>
+                            <mark class="lowlight">Radius</mark>: The radius of the circle in meters<br><br>
                             If flashlight type is set to "Circular Arc", these parameters will be used<br>
-                            <mark class="parameter">Position</mark>: X and Y coordinates in meters of the center of the arc<br>
-                            <mark class="parameter">Radius</mark>: The radius in meters of the arc<br>
-                            <mark class="parameter">Starting Angle</mark>: The starting angle of the arc in degrees<br>
-                            <mark class="parameter">Ending Angle</mark>: The ending angle of the arc in degrees
+                            <mark class="lowlight">Position</mark>: X and Y coordinates of the center of the arc in meters<br>
+                            <mark class="lowlight">Radius</mark>: The radius of the arc in meters<br>
+                            <mark class="lowlight">Starting Angle</mark>: The starting angle of the arc in degrees<br>
+                            <mark class="lowlight">Ending Angle</mark>: The ending angle of the arc in degrees
                         </p>
                 <h2 class="tab1">Output: Contains the data that is used for displaying the result</h2>
                 <p class="tab2">
-                    <mark class="parameter">Maximum Iterations Per Field Line</mark>: The maximum number of calculations for each field line to reduce unnecessary computation<br>
-                    <mark class="parameter">Step Per Iteration</mark>: The step traveled by each field line before and after every calculation<br>
-                    <mark class="parameter">MinimumX</mark>: The minimum x-value in meters that is displayed by the viewport<br>
-                    <mark class="parameter">MinimumY</mark>: The minimum y-value in meters that is displayed by the viewport<br>
-                    <mark class="parameter">MaximumX</mark>: The maximum x-value in meters that is displayed by the viewport<br>
-                    <mark class="parameter">MaximumY</mark>: The maximum y-value in meters that is displayed by the viewport
+                    <mark class="lowlight">Maximum Iterations Per Field Line</mark>: The maximum number of calculations for each field line which helps prevent unnecessary computation<br>
+                    <mark class="lowlight">Step Per Iteration</mark>: The step traveled by each field line in meters before and after every calculation<br>
+                    <mark class="lowlight">MinimumX</mark>: The minimum x-value in meters that is displayed by the viewport<br>
+                    <mark class="lowlight">MinimumY</mark>: The minimum y-value in meters that is displayed by the viewport<br>
+                    <mark class="lowlight">MaximumX</mark>: The maximum x-value in meters that is displayed by the viewport<br>
+                    <mark class="lowlight">MaximumY</mark>: The maximum y-value in meters that is displayed by the viewport
                 </p>
             <h1><mark class="highlight">Units</mark></h1>
                 <h3 class="tab1">
-                    Charges: <mark class="parameter">Coulombs (C)<br></mark>
-                    Electric Fields: <mark class="parameter">Newtons / Coulomb (N/C)<br></mark>
-                    Distances, Coordinates: <mark class="parameter">meters (m)</mark>
+                    Charges: <mark class="lowlight">Coulombs (C)<br></mark>
+                    Electric Fields: <mark class="lowlight">Newtons / Coulomb (N/C)<br></mark>
+                    Distances, Coordinates: <mark class="lowlight">meters (m)</mark>
                 </h3>
             <h1><mark class="highlight">Rules</mark></h1>
                 <h3 class="tab1">
-                    Number of charges is less than or equal to <mark class="parameter">100</mark><br>
-                    Number of flashlights is less than or equal to <mark class="parameter">100</mark><br>
-                    Total Number of Field Lines &#215; Maximum Iterations Per Field Line &#215; Number of Charges is less than or equal to <mark class="parameter">1,000,000</mark>
+                    Number of charges is less than or equal to <mark class="lowlight">100</mark><br>
+                    Number of flashlights is less than or equal to <mark class="lowlight">100</mark><br>
+                    Total Number of Field Lines &#215; Maximum Iterations Per Field Line &#215; Number of Charges is less than or equal to <mark class="lowlight">1,000,000</mark>
                 </h3>
         </div>
-        
         <style>
         
             *
             {
                 color: white;
-            }
-            
-            .tab1
-            {
-                margin-left: 40px;
-            }
-            
-            .tab2
-            {
-                margin-left: 80px;
-            }
-            
-            .tab3
-            {
-                margin-left: 120px;
             }
             
             body
@@ -119,7 +103,7 @@
                 border-radius: 5px;
                 padding: 10px;
                 transform: perspective(1px) translateZ(0);
-                transition: transform 0.3s;
+                transition: 0.3s;
             }
             
             #button:hover
@@ -136,8 +120,8 @@
             
             @keyframes spin
             {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
+              from {transform: rotate(0deg);}
+              to {transform: rotate(360deg);}
             }
             
             #image
@@ -159,10 +143,25 @@
                 background: #ffa040;
             }
             
-            .parameter
+            .lowlight
             {
                 color: #ffa040;
                 background: none;
+            }
+            
+            .tab1
+            {
+                margin-left: 40px;
+            }
+            
+            .tab2
+            {
+                margin-left: 80px;
+            }
+            
+            .tab3
+            {
+                margin-left: 120px;
             }
             
             @font-face
@@ -217,7 +216,7 @@
                             }
                         }
                     };
-                    xhttp.open("POST", "./scripts/server.php", true);
+                    xhttp.open("POST", "./php/main.php", true);
                     xhttp.send(input.value);
                 }
             }
@@ -255,7 +254,7 @@
                         }
                     }
                 };
-                xhttp.open("GET", "./scripts/examples.php", true);
+                xhttp.open("GET", "./php/examples.php", true);
                 xhttp.send();
             }
         
