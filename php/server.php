@@ -434,7 +434,7 @@ if(!empty(file_get_contents('php://input')))
                 
                 if(is_array($dataCharges) && is_array($dataFlashlights) && is_int($dataMaximumIterationsPerFieldLine) && (is_int($dataStepPerIteration) || is_float($dataStepPerIteration)) && (is_int($dataMinimumX) || is_float($dataMinimumX)) && (is_int($dataMinimumY) || is_float($dataMinimumY)) && (is_int($dataMaximumX) || is_float($dataMaximumX)) && (is_int($dataMaximumY) || is_float($dataMaximumY)))
                 {
-                    if(count($dataCharges) <= 100 && count($dataFlashlights) <= 100 && abs($dataStepPerIteration) <= 1E100)
+                    if(count($dataCharges) <= 100 && count($dataFlashlights) <= 100 && $dataMaximumIterationsPerFieldLine >= 0 && $dataMaximumIterationsPerFieldLine <= 1000000 && $dataStepPerIteration >= 1E-100 && $dataStepPerIteration <= 1E100 && $dataMinimumX < $dataMaximumX && $dataMinimumX >= -1E100 && $dataMaximumX <= 1E100 && $dataMinimumY < $dataMaximumY && $dataMinimumY >= -1E100 && $dataMaximumY <= 1E100)
                     {
                         $dataChargesValid = true;
                         
@@ -498,7 +498,7 @@ if(!empty(file_get_contents('php://input')))
                             break;
                         }
                         
-                        if($dataChargesValid && $dataMaximumIterationsPerFieldLine >= 0 && $dataStepPerIteration > 0 && $dataMinimumX < $dataMaximumX && $dataMinimumY < $dataMaximumY)
+                        if($dataChargesValid)
                         {
                             $dataFlashlightsValid = true;
                             $totalNumberOfFieldLines = 0;
@@ -534,9 +534,9 @@ if(!empty(file_get_contents('php://input')))
                                         {
                                             if(property_exists($dataFlashlight->position, 'x') && property_exists($dataFlashlight->position, 'y') && (is_int($dataFlashlight->radius) || is_float($dataFlashlight->radius)))
                                             {
-                                                if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)) && $dataFlashlight->radius > 0)
+                                                if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)))
                                                 {
-                                                    if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && abs($dataFlashlight->radius) <= 1E100)
+                                                    if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && $dataFlashlight->radius > 0 && $dataFlashlight->radius <= 1E100)
                                                     {
                                                         $dataFlashlightValid = true;
                                                     }
@@ -551,9 +551,9 @@ if(!empty(file_get_contents('php://input')))
                                         {
                                             if(property_exists($dataFlashlight->position, 'x') && property_exists($dataFlashlight->position, 'y') && (is_int($dataFlashlight->radius) || is_float($dataFlashlight->radius)) && (is_int($dataFlashlight->startingAngle) || is_float($dataFlashlight->startingAngle)) && (is_int($dataFlashlight->endingAngle) || is_float($dataFlashlight->endingAngle)))
                                             {
-                                                if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)) && $dataFlashlight->radius > 0 && $dataFlashlight->startingAngle >= 0 && $dataFlashlight->endingAngle <= 360 && $dataFlashlight->startingAngle < $dataFlashlight->endingAngle)
+                                                if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)))
                                                 {
-                                                    if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && abs($dataFlashlight->radius) <= 1E100)
+                                                    if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && $dataFlashlight->radius > 0 && $dataFlashlight->radius <= 1E100 && $dataFlashlight->startingAngle >= 0 && $dataFlashlight->endingAngle <= 360 && $dataFlashlight->startingAngle < $dataFlashlight->endingAngle)
                                                     {
                                                         $dataFlashlightValid = true;
                                                     }
@@ -566,7 +566,7 @@ if(!empty(file_get_contents('php://input')))
                                     {
                                         if(is_int($dataFlashlight->numberOfFieldLines))
                                         {
-                                            if($dataFlashlight->numberOfFieldLines >= 0)
+                                            if($dataFlashlight->numberOfFieldLines >= 0 && $dataFlashlight->numberOfFieldLines <= 1000)
                                             {
                                                 $totalNumberOfFieldLines += $dataFlashlight->numberOfFieldLines;
                                                 continue;
@@ -579,7 +579,7 @@ if(!empty(file_get_contents('php://input')))
                                 break;
                             }
                             
-                            if($dataFlashlightsValid && $totalNumberOfFieldLines * $dataMaximumIterationsPerFieldLine * count($dataCharges) <= 1000000)
+                            if($dataFlashlightsValid && $totalNumberOfFieldLines <= 1000 && $totalNumberOfFieldLines * $dataMaximumIterationsPerFieldLine * count($dataCharges) <= 1000000)
                             {
                                 $charges = array();
                                 
