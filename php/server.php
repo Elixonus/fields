@@ -675,17 +675,19 @@ if(!empty(file_get_contents('php://input')))
                                             {
                                                 $fieldAtPoint = $collection->getElectricFieldVectorAtPoint($fieldLinePosition);
                                                 
-                                                if(($fieldAtPoint->x == 0 && $fieldAtPoint->y == 0) || $fieldAtPoint === INF)
+                                                if($fieldAtPoint === INF)
                                                 {
                                                     break;
                                                 }
                                                 
-                                                if($l > 0)
+                                                if($fieldAtPoint->x == 0 && $fieldAtPoint->y == 0)
                                                 {
-                                                    if($previousFieldAtPoint->getDotProductWith($fieldAtPoint) < 0)
-                                                    {
-                                                        break;
-                                                    }
+                                                    break;
+                                                }
+                                                
+                                                if($l > 0 && $previousFieldAtPoint->getDotProductWith($fieldAtPoint) < 0)
+                                                {
+                                                    break;
                                                 }
                                                 
                                                 $previousFieldAtPoint = $fieldAtPoint->copy();
@@ -830,6 +832,51 @@ if(!empty(file_get_contents('php://input')))
                                 
                                 $image->drawImage($elementsDraw);
                                 $elementsDraw->clear();
+                                //echo base64_encode($image->getImageBlob());
+                                
+                                
+                                
+                                
+                                
+                                
+                                $electricFieldStrengths = array();
+                                $counter = 0;
+                                
+                                for($y = $height; $y > 0; $y--)
+                                {
+                                    for($x = 0; $x < $width; $x++)
+                                    {
+                                        $electricFieldStrength = $collection->getElectricFieldVectorAtPoint(screenCoordinatesToVirtualPosition($x + 0.5, $y + 0.5));
+                                        
+                                        if($electricFieldStrength !== INF)
+                                        {
+                                            $electricFieldStrength = $electricFieldStrength->getMagnitude();
+                                        }
+                                        
+                                        array_push($electricFieldStrengths, array($counter, $electricFieldStrength));
+                                        $counter++;
+                                    }
+                                }
+                                
+                                usort($electricFieldStrengths, function($a, $b) { return $a[1] <=> $b[1]; });
+                                
+                                for($e = 0; $e < count($electricFieldStrengths); $e++)
+                                {
+                                    $electricFieldStrengths[$e][1] = $e / (count($electricFieldStrengths) - 1);
+                                }
+                                
+                                usort($electricFieldStrengths, function($a, $b) { return $a[0] <=> $b[0]; });
+                                
+                                $pixels = array();
+                                
+                                for($e = 0; $e < count($electricFieldStrengths); $e++)
+                                {
+                                    $pixel = new ImagickPixel('hsl('.round(300 * $electricFieldStrengths[$e][1]).', 255, 128)');
+                                    $color = $pixel->getColor();
+                                    array_push($pixels, $color['r'], $color['g'], $color['b']);
+                                }
+                                
+                                $image->importImagePixels(0, 0, $width, $height, 'RGB', Imagick::PIXEL_CHAR, $pixels);
                                 echo base64_encode($image->getImageBlob());
                                 
                                 //var_dump($collection->getElectricFieldVectorAtPoint(new Point(0.301, 0.6)));
@@ -1018,9 +1065,54 @@ function getUniqueSortedCDFS($numbers)
     return $CDFS;
 }*/
 
+
+
+
+
+
+
+
+
+
+
+
+/*$values = array(array(0, 12983), array(1, 34), array(2, 1039), array(3, 1039));
+usort($values, function($a, $b) { return ($a[1] <=> $b[1]); });
+
+for($n = 0; $n < count($values); $n++)
+{
+    var_dump($values[$n]);
+    echo '<br>';
+}
+
+usort($values, function($a, $b) { return $a[0] <=> $b[0]; });
+echo '<br><br><br>';
+
+for($n = 0; $n < count($values); $n++)
+{
+    var_dump($values[$n]);
+    echo '<br>';
+}*/
+
+
+
+
+
+
+
+
+
+
+
+
 function interpolate($startingValue, $endingValue, $value)
 {
     return ($startingValue + ($endingValue - $startingValue) * $value);
+}
+
+function comparison($a, $b)
+{
+    
 }
 
 function virtualPositionToScreenCoordinates($position)
