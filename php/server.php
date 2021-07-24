@@ -638,8 +638,11 @@ if(!empty(file_get_contents('php://input')))
                                 $multiplierY = $height / ($maximumY - $minimumY);
                                 
                                 $image = new Imagick();
-                                $image->newImage($width, $height, 'white');
+                                $image->newImage($width, 2 * $height, 'white');
                                 $image->setImageFormat('png');
+                                
+                                $electricFieldImage = new Imagick();
+                                $electricFieldImage->newImage($width, $height, 'white');
                                 $backgroundDraw = new ImagickDraw();
                                 $backgroundDraw->setFillColor('#fcfaf5');
                                 
@@ -651,7 +654,7 @@ if(!empty(file_get_contents('php://input')))
                                     }
                                 }
                                 
-                                $image->drawImage($backgroundDraw);
+                                $electricFieldImage->drawImage($backgroundDraw);
                                 $backgroundDraw->clear();
                                 $electricFieldDraw = new ImagickDraw();
                                 $electricFieldDraw->affine(array('sx' => 1, 'sy' => -1, 'rx' => 0, 'ry' => 0, 'tx' => 0, 'ty' => $height));
@@ -702,7 +705,7 @@ if(!empty(file_get_contents('php://input')))
                                     }
                                 }
                                 
-                                $image->drawImage($electricFieldDraw);
+                                $electricFieldImage->drawImage($electricFieldDraw);
                                 $electricFieldDraw->clear();
                                 $elementsDraw = new ImagickDraw();
                                 $elementsDraw->affine(array('sx' => 1, 'sy' => -1, 'rx' => 0, 'ry' => 0, 'tx' => 0, 'ty' => $height));
@@ -830,8 +833,10 @@ if(!empty(file_get_contents('php://input')))
                                     }
                                 }
                                 
-                                $image->drawImage($elementsDraw);
+                                $electricFieldImage->drawImage($elementsDraw);
                                 $elementsDraw->clear();
+                                $image->compositeImage($electricFieldImage, Imagick::COMPOSITE_DEFAULT, 0, 0);
+                                $electricFieldImage->clear();
                                 //echo base64_encode($image->getImageBlob());
                                 
                                 
@@ -839,44 +844,98 @@ if(!empty(file_get_contents('php://input')))
                                 
                                 
                                 
-                                $electricFieldStrengths = array();
-                                $counter = 0;
+                                $electricFieldStrengthsIndex = array();
                                 
                                 for($y = $height; $y > 0; $y--)
                                 {
                                     for($x = 0; $x < $width; $x++)
                                     {
-                                        $electricFieldStrength = $collection->getElectricFieldVectorAtPoint(screenCoordinatesToVirtualPosition($x + 0.5, $y + 0.5));
+                                        $electricFieldStrengthIndex = $collection->getElectricFieldVectorAtPoint(screenCoordinatesToVirtualPosition($x + 0.5, $y + 0.5));
                                         
-                                        if($electricFieldStrength !== INF)
+                                        if($electricFieldStrengthIndex !== INF)
                                         {
-                                            $electricFieldStrength = $electricFieldStrength->getMagnitude();
+                                            $electricFieldStrengthIndex = $electricFieldStrengthIndex->getMagnitude();
                                         }
                                         
-                                        array_push($electricFieldStrengths, array($counter, $electricFieldStrength));
-                                        $counter++;
+                                        array_push($electricFieldStrengthsIndex, array(($height - $y) * $width + $x, $electricFieldStrengthIndex));
                                     }
                                 }
                                 
-                                usort($electricFieldStrengths, function($a, $b) { return $a[1] <=> $b[1]; });
+                                usort($electricFieldStrengthsIndex, function($a, $b) { return $a[1] <=> $b[1]; });
                                 
-                                for($e = 0; $e < count($electricFieldStrengths); $e++)
+                                for($e = 0; $e < count($electricFieldStrengthsIndex); $e++)
                                 {
-                                    $electricFieldStrengths[$e][1] = $e / (count($electricFieldStrengths) - 1);
+                                    $electricFieldStrengthsIndex[$e][1] = $e;
                                 }
                                 
-                                usort($electricFieldStrengths, function($a, $b) { return $a[0] <=> $b[0]; });
+                                usort($electricFieldStrengthsIndex, function($a, $b) { return $a[0] <=> $b[0]; });
                                 
                                 $pixels = array();
                                 
-                                for($e = 0; $e < count($electricFieldStrengths); $e++)
+                                for($e = 0; $e < count($electricFieldStrengthsIndex); $e++)
                                 {
-                                    $pixel = new ImagickPixel('hsl('.round(300 * $electricFieldStrengths[$e][1]).', 255, 128)');
-                                    $color = $pixel->getColor();
-                                    array_push($pixels, $color['r'], $color['g'], $color['b']);
+                                    $value = round(1 - $electricFieldStrengthsIndex[$e][1] / (count($electricFieldStrengthsIndex) - 1), 2);
+                                    
+                                    if($value < 0.1)
+                                    {
+                                        $value1 = 0;
+                                        $value2 = 0.1;
+                                        $color1 = array(143, 0, 0);
+                                        $color2 = array(200, 0, 0);
+                                    }
+
+                                    else if($value < 0.3)
+                                    {
+                                        $value1 = 0.1;
+                                        $value2 = 0.3;
+                                        $color1 = array(200, 0, 0);
+                                        $color2 = array(255, 255, 0);
+                                    }
+                                    
+                                    else if($value < 0.5)
+                                    {
+                                        $value1 = 0.3;
+                                        $value2 = 0.5;
+                                        $color1 = array(255, 255, 0);
+                                        $color2 = array(0, 218, 21);
+                                    }
+                                    
+                                    else if($value < 0.7)
+                                    {
+                                        $value1 = 0.5;
+                                        $value2 = 0.7;
+                                        $color1 = array(0, 218, 21);
+                                        $color2 = array(0, 17, 164);
+                                    }
+                                    
+                                    else if($value < 0.9)
+                                    {
+                                        $value1 = 0.7;
+                                        $value2 = 0.9;
+                                        $color1 = array(0, 17, 164);
+                                        $color2 = array(84, 0, 112);
+                                    }
+                                    
+                                    else
+                                    {
+                                        $value1 = 0.9;
+                                        $value2 = 1;
+                                        $color1 = array(84, 0, 112);
+                                        $color2 = array(47, 0, 62);
+                                    }
+                                    
+                                    $color = array();
+                                    $interpolation = ($value - $value1) / ($value2 - $value1);
+                                    
+                                    for($c = 0; $c < 3; $c++)
+                                    {
+                                        array_push($color, round(interpolate($color1[$c], $color2[$c], $interpolation)));
+                                    }
+                                    
+                                    array_push($pixels, $color[0], $color[1], $color[2]);
                                 }
                                 
-                                $image->importImagePixels(0, 0, $width, $height, 'RGB', Imagick::PIXEL_CHAR, $pixels);
+                                $image->importImagePixels(0, $height, $width, $height, 'RGB', Imagick::PIXEL_CHAR, $pixels);
                                 echo base64_encode($image->getImageBlob());
                                 
                                 //var_dump($collection->getElectricFieldVectorAtPoint(new Point(0.301, 0.6)));
@@ -1105,9 +1164,9 @@ for($n = 0; $n < count($values); $n++)
 
 
 
-function interpolate($startingValue, $endingValue, $value)
+function interpolate($startingValue, $endingValue, $interpolation)
 {
-    return ($startingValue + ($endingValue - $startingValue) * $value);
+    return ($startingValue + ($endingValue - $startingValue) * $interpolation);
 }
 
 function comparison($a, $b)
