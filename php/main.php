@@ -924,31 +924,48 @@ if(!empty(file_get_contents('php://input')))
                                 $elementsDraw->clear();
                                 $image->compositeImage($electricFieldImage, Imagick::COMPOSITE_DEFAULT, 0, 0);
                                 $electricFieldImage->clear();
-                                $electricPotentialsIndex = array();
+                                $electricPotentialsCDF = array();
                                 
                                 for($y = $height; $y > 0; $y--)
                                 {
                                     for($x = 0; $x < $width; $x++)
                                     {
-                                        $electricPotentialIndex = $collection->getElectricPotentialAtPoint(screenCoordinatesToVirtualPosition($x + 0.5, $y + 0.5));
-                                        array_push($electricPotentialsIndex, array(($height - $y) * $width + $x, $electricPotentialIndex));
+                                        $electricPotential = $collection->getElectricPotentialAtPoint(screenCoordinatesToVirtualPosition($x + 0.5, $y + 0.5));
+                                        array_push($electricPotentialsCDF, array(($height - $y) * $width + $x, $electricPotential));
                                     }
                                 }
                                 
-                                usort($electricPotentialsIndex, function($a, $b) { return $a[1] <=> $b[1]; });
+                                usort($electricPotentialsCDF, function($a, $b) { return $a[1] <=> $b[1]; });
                                 
-                                for($e = 0; $e < count($electricPotentialsIndex); $e++)
+                                for($e = 0; $e < count($electricPotentialsCDF); $e++)
                                 {
-                                    $electricPotentialsIndex[$e][1] = $e;
+                                    $repeatCounter = 1;
+                                    
+                                    while($electricPotentialsCDF[$e][1] == $electricPotentialsCDF[$e + $repeatCounter][1])
+                                    {
+                                        $repeatCounter++;
+                                        
+                                        if($e + $repeatCounter === count($electricPotentialsCDF))
+                                        {
+                                            break;
+                                        }
+                                    }
+                                    
+                                    $e += $repeatCounter - 1;
+                                    
+                                    for($r = 0; $r < $repeatCounter; $r++)
+                                    {
+                                        $electricPotentialsCDF[$e - $r][1] = $e;
+                                    }
                                 }
                                 
-                                usort($electricPotentialsIndex, function($a, $b) { return $a[0] <=> $b[0]; });
+                                usort($electricPotentialsCDF, function($a, $b) { return $a[0] <=> $b[0]; });
                                 
                                 $pixels = array();
                                 
-                                for($e = 0; $e < count($electricPotentialsIndex); $e++)
+                                for($e = 0; $e < count($electricPotentialsCDF); $e++)
                                 {
-                                    $pixel = HSLToRGB(240 * (1 - $electricPotentialsIndex[$e][1] / (count($electricPotentialsIndex) - 1)), 1, 0.5);
+                                    $pixel = HSLToRGB(240 * (1 - ($electricPotentialsCDF[$e][1] - $electricPotentialsCDF[0][1]) / (count($electricPotentialsCDF) - $electricPotentialsCDF[0][1])), 1, 0.5);
                                     
                                     for($c = 0; $c < 3; $c++)
                                     {
@@ -958,107 +975,6 @@ if(!empty(file_get_contents('php://input')))
                                 
                                 $image->importImagePixels(0, $height, $width, $height, 'RGB', Imagick::PIXEL_CHAR, $pixels);
                                 echo base64_encode($image->getImageBlob());
-                                
-                                //var_dump($collection->getElectricFieldVectorAtPoint(new Point(0.301, 0.6)));
-                                //echo '================';
-                                //var_dump($collection->getElectricFieldVectorAtPoint(new Point(0.301, 0.4)));
-                                
-                                /*$electricFieldStrengths = array();
-                                
-                                for($y = $height; $y > 0; $y--)
-                                {
-                                    for($x = 0; $x < $width; $x++)
-                                    {
-                                        $electricField = $collection->getElectricFieldVectorAtPoint(screenCoordinatesToVirtualPosition($x + 0.5, $y + 0.5));
-                                        
-                                        if($x == 400 && $y == 500)
-                                        {
-                                            //echo $electricField->getMagnitude().'====';
-                                        }
-                                        
-                                        if($x == 300 && $y == 500)
-                                        {
-                                            //echo $electricField->getMagnitude().'====';
-                                        }
-                                        
-                                        if($electricField === INF)
-                                        {
-                                            $electricFieldStrength = $electricField;
-                                        }
-                                        
-                                        else
-                                        {
-                                            $electricFieldStrength = $electricField->getMagnitude();
-                                        }
-                                        
-                                        array_push($electricFieldStrengths, $electricFieldStrength);
-                                    }
-                                }
-                                
-                                $pixels = array();
-                                
-                                for($p = 0; $p < $width * $height; $p++)
-                                {
-                                    $pixel = 255 / (1 + exp(-3E6 * $electricFieldStrengths[$p]));
-                                    array_push($pixels, $pixel, $pixel, $pixel);
-                                }*/
-                                
-                                //$image->importImagePixels(0, 0, $width, $height, 'RGB', Imagick::PIXEL_CHAR, $pixels);
-                                //echo base64_encode($image->getImageBlob());
-                                
-                                /*
-                                $pixels = array();
-                                
-                                for($p = 0; $p < $width * $height; $p++)
-                                {
-                                    $pixel = 255 * $orderedElectricFieldStrengths[$electricFieldStrengths[$p]] / ($width * $height);
-                                    array_push($pixels, $pixel, $pixel, $pixel);
-                                }
-                                
-                                $image->importImagePixels(0, 0, $width, $height, 'RGB', Imagick::PIXEL_CHAR, $pixels);
-                                echo base64_encode($image->getImageBlob());
-                                */
-    /*                            $cdf = 0;
-                                
-                                for($e = 0; $e < count($orderedElectricFieldStrengths); $e++)
-                                {
-                                    $numberOfRepeats = 0;
-                                    
-                                    while($orderedElectricFieldStrengths[$e] == $orderedElectricFieldStrengths[$e + $numberOfRepeats + 1])
-                                    {
-                                        $numberOfRepeats++;
-                                        
-                                        if($e + $numberOfRepeats + 1 === count($orderedElectricFieldStrengths))
-                                        {
-                                            break;
-                                        }
-                                    }
-                                    
-                                    $cdf += $numberOfRepeats + 1;
-                                    $cdfs[$e] = $cdf;
-                                    $e += $numberOfRepeats;
-                                }
-                                
-                                $CDFS = array();
-                                $previousCDF = 0;
-                                $orderedElectricFieldStrengths = array(14, 29, 29, 79, 105, 135);
-                                
-                                for($e = 1; $e < count($orderedElectricFieldStrengths); $e++)
-                                {
-                                    if($orderedElectricFieldStrengths[$e] != $orderedElectricFieldStrengths[$e - 1])
-                                    {
-                                        $numberOfRepeats = 1;
-                                        $previousCDF += $numberOfRepeats;
-                                        $CDFS[$e - 1] = $previousCDF;
-                                    }
-                                    
-                                    else
-                                    {
-                                        $numberOfRepeats++;
-                                    }
-                                }
-                                
-                                $CDFS[count($orderedElectricFieldStrengths) - 1] = $previousCDF;*/
                             }
                         }
                     }
@@ -1067,123 +983,6 @@ if(!empty(file_get_contents('php://input')))
         }
     }
 }
-
-
-
-
-
-
-
-
-
-/*
-
-
-getEqualizedNumbers(array(5, 5, 9, 9, 9, 1));
-//var_dump(getUniqueSortedCDFS(array(1, 1, 5, 5, 9, 9, 9)));
-
-function getEqualizedNumbers($numbers)
-{
-    $sortedNumbers = $numbers;
-    asort($sortedNumbers);
-    
-    // $numbers = [5, 5, 9, 9, 9, 1]
-    // $sortedNumbers = [1, 5, 5, 9, 9, 9]
-    // $sortedUniqueCDFS = [1, 3, 6]
-    // $minimumCDF = 1;
-    
-    var_dump($sortedNumbers);
-    $sortedUniqueCDFS = getUniqueSortedCDFS($sortedNumbers);
-    $minimumCDF = $sortedUniqueCDFS[0];
-    
-    // $equalizedNumbers = [0.4, 0.4, 1, 1, 1, 0]
-    $sortedEqualizedNumbers = array();
-    
-    for($n = 0; $n < count($sortedUniqueCDFS); $n++)
-    {
-        $equalizedNumber = ($sortedUniqueCDFS[$n] - $minimumCDF) / (count($numbers) - $minimumCDF);
-        
-        for($m = 0; $m < $sortedUniqueCDFS[$n] - ($n === 0 ? 0 : $sortedUniqueCDFS[$n - 1]); $m++)
-        {
-            array_push($sortedEqualizedNumbers, $equalizedNumber);
-        }
-    }
-    
-    for($n = 0; $n < count($numbers); $n++)
-    {
-        $equalizedNumbers[array_keys($sortedNumbers)[$n]] = $sortedEqualizedNumbers[$n];
-    }
-    
-    ksort($equalizedNumbers);
-    return $equalizedNumbers;
-}
-
-function getUniqueSortedCDFS($numbers)
-{
-    $CDFS = array();
-    $CDF = 0;
-    
-    for($n = 0; $n < count($numbers); $n++)
-    {
-        $numberOfRepeats = 0;
-        
-        while($numbers[$n] == $numbers[$n + $numberOfRepeats + 1])
-        {
-            $numberOfRepeats++;
-            
-            if($n + $numberOfRepeats + 1 === count($numbers))
-            {
-                break;
-            }
-        }
-        
-        $CDF += $numberOfRepeats + 1;
-        $CDFS[$n] = $CDF;
-        $n += $numberOfRepeats;
-    }
-    
-    return $CDFS;
-}*/
-
-
-
-
-
-
-
-
-
-
-
-
-/*$values = array(array(0, 12983), array(1, 34), array(2, 1039), array(3, 1039));
-usort($values, function($a, $b) { return ($a[1] <=> $b[1]); });
-
-for($n = 0; $n < count($values); $n++)
-{
-    var_dump($values[$n]);
-    echo '<br>';
-}
-
-usort($values, function($a, $b) { return $a[0] <=> $b[0]; });
-echo '<br><br><br>';
-
-for($n = 0; $n < count($values); $n++)
-{
-    var_dump($values[$n]);
-    echo '<br>';
-}*/
-
-
-
-
-
-
-
-
-
-
-
 
 function interpolate($startingValue, $endingValue, $interpolation)
 {
