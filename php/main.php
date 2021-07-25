@@ -959,13 +959,14 @@ if(!empty(file_get_contents('php://input')))
                                     }
                                 }
                                 
+                                $electricPotentialsMinimumCDF = $electricPotentialsCDF[0][1];
                                 usort($electricPotentialsCDF, function($a, $b) { return $a[0] <=> $b[0]; });
                                 
                                 $pixels = array();
                                 
                                 for($e = 0; $e < count($electricPotentialsCDF); $e++)
                                 {
-                                    $pixel = HSLToRGB(240 * (1 - ($electricPotentialsCDF[$e][1] - $electricPotentialsCDF[0][1]) / (count($electricPotentialsCDF) - $electricPotentialsCDF[0][1])), 1, 0.5);
+                                    $pixel = HSLToRGB(240 * (1 - ($electricPotentialsCDF[$e][1] - $electricPotentialsMinimumCDF) / (count($electricPotentialsCDF) - $electricPotentialsMinimumCDF)), 1, 0.5);
                                     
                                     for($c = 0; $c < 3; $c++)
                                     {
