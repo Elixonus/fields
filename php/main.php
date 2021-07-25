@@ -133,6 +133,12 @@ class Collection
         return $this;
     }
     
+    function addChargeIndex($charge, $index)
+    {
+        array_splice($this->charges, $index, 0, $charge);
+        return $this;
+    }
+    
     function removeCharge($charge)
     {
         return $this->removeChargeIndex(array_search($charge, $this->charges));
@@ -166,6 +172,29 @@ class Collection
         
         return $totalElectricField;
     }
+    
+    function getElectricPotentialAtPoint($point)
+    {
+        $totalElectricPotential = 0;
+        
+        for($c = 0; $c < count($this->charges); $c++)
+        {
+            $charge = $this->charges[$c];
+            $electricPotential = $charge->getElectricPotentialAtPoint($point);
+            
+            if(abs($electricPotential) === INF)
+            {
+                return $electricPotential;
+            }
+            
+            else
+            {
+                $totalElectricPotential += $electricPotential;
+            }
+        }
+        
+        return $totalElectricPotential;
+    }
 }
 
 class PointCharge
@@ -194,6 +223,21 @@ class PointCharge
             $direction = $this->position->getDirectionTo($point);
             $magnitude = 8.9875517923E9 * $this->charge / pow($distanceToPoint, 2);
             return Point::fromPolar($magnitude, $direction);
+        }
+    }
+    
+    function getElectricPotentialAtPoint($point)
+    {
+        $distanceToPoint = $this->position->getDistanceTo($point);
+        
+        if($distanceToPoint == 0)
+        {
+            return $this->charge * INF;
+        }
+        
+        else
+        {
+            return 8.9875517923E9 * $this->charge / $distanceToPoint;
         }
     }
 }
@@ -258,6 +302,49 @@ class FiniteLineCharge
         else
         {
             return (new Point($lineVector->x * $electricFieldII + $lineVector->y * $electricFieldT, $lineVector->y * $electricFieldII - $lineVector->x * $electricFieldT))->divideBy($distanceBetweenEndpoints);
+        }
+    }
+    
+    function getElectricPotentialAtPoint($point)
+    {
+        $lineVector = $this->endpoint2->copy()->subtractTo($this->endpoint1);
+        $distanceBetweenEndpoints = $lineVector->getMagnitude();
+        $relativePositionEndpoint1 = ($lineVector->x * ($this->endpoint1->x - $point->x) + $lineVector->y * ($this->endpoint1->y - $point->y)) / $distanceBetweenEndpoints;
+        $relativePositionEndpoint2 = $relativePositionEndpoint1 + $distanceBetweenEndpoints;
+        $squaredDistanceToEndpoint1 = $point->getSquaredDistanceTo($this->endpoint1);
+        $squaredDistanceToEndpoint2 = $point->getSquaredDistanceTo($this->endpoint2);
+        $distanceToProjection = sqrt(abs($squaredDistanceToEndpoint1 - pow($relativePositionEndpoint1, 2)));
+        $chargeDensity = $this->charge / $distanceBetweenEndpoints;
+        
+        if($distanceToProjection == 0)
+        {
+            if($relativePositionEndpoint1 < 0 && $relativePositionEndpoint2 < 0)
+            {
+                return 8.9875517923E9 * $chargeDensity * log($relativePositionEndpoint1 / $relativePositionEndpoint2);
+            }
+            
+            if($relativePositionEndpoint1 <= 0 && $relativePositionEndpoint2 >= 0)
+            {
+                return $this->charge * INF;
+            }
+            
+            if($relativePositionEndpoint1 > 0 && $relativePositionEndpoint2 > 0)
+            {
+                return 8.9875517923E9 * $chargeDensity * log($relativePositionEndpoint2 / $relativePositionEndpoint1);
+            }
+        }
+        
+        $distanceToEndpoint1 = sqrt($squaredDistanceToEndpoint1);
+        $distanceToEndpoint2 = sqrt($squaredDistanceToEndpoint2);
+        
+        if($relativePositionEndpoint1 > 0 && $relativePositionEndpoint2 > 0)
+        {
+            return 8.9875517923E9 * $chargeDensity * log(($relativePositionEndpoint2 + $distanceToEndpoint2) / ($relativePositionEndpoint1 + $distanceToEndpoint1));
+        }
+        
+        else
+        {
+            return 8.9875517923E9 * $chargeDensity * log(abs(($distanceToEndpoint1 - $relativePositionEndpoint1) / ($distanceToEndpoint2 - $relativePositionEndpoint2)));
         }
     }
 }
@@ -837,102 +924,36 @@ if(!empty(file_get_contents('php://input')))
                                 $elementsDraw->clear();
                                 $image->compositeImage($electricFieldImage, Imagick::COMPOSITE_DEFAULT, 0, 0);
                                 $electricFieldImage->clear();
-                                //echo base64_encode($image->getImageBlob());
-                                
-                                
-                                
-                                
-                                
-                                
-                                $electricFieldStrengthsIndex = array();
+                                $electricPotentialsIndex = array();
                                 
                                 for($y = $height; $y > 0; $y--)
                                 {
                                     for($x = 0; $x < $width; $x++)
                                     {
-                                        $electricFieldStrengthIndex = $collection->getElectricFieldVectorAtPoint(screenCoordinatesToVirtualPosition($x + 0.5, $y + 0.5));
-                                        
-                                        if($electricFieldStrengthIndex !== INF)
-                                        {
-                                            $electricFieldStrengthIndex = $electricFieldStrengthIndex->getMagnitude();
-                                        }
-                                        
-                                        array_push($electricFieldStrengthsIndex, array(($height - $y) * $width + $x, $electricFieldStrengthIndex));
+                                        $electricPotentialIndex = $collection->getElectricPotentialAtPoint(screenCoordinatesToVirtualPosition($x + 0.5, $y + 0.5));
+                                        array_push($electricPotentialsIndex, array(($height - $y) * $width + $x, $electricPotentialIndex));
                                     }
                                 }
                                 
-                                usort($electricFieldStrengthsIndex, function($a, $b) { return $a[1] <=> $b[1]; });
+                                usort($electricPotentialsIndex, function($a, $b) { return $a[1] <=> $b[1]; });
                                 
-                                for($e = 0; $e < count($electricFieldStrengthsIndex); $e++)
+                                for($e = 0; $e < count($electricPotentialsIndex); $e++)
                                 {
-                                    $electricFieldStrengthsIndex[$e][1] = $e;
+                                    $electricPotentialsIndex[$e][1] = $e;
                                 }
                                 
-                                usort($electricFieldStrengthsIndex, function($a, $b) { return $a[0] <=> $b[0]; });
+                                usort($electricPotentialsIndex, function($a, $b) { return $a[0] <=> $b[0]; });
                                 
                                 $pixels = array();
                                 
-                                for($e = 0; $e < count($electricFieldStrengthsIndex); $e++)
+                                for($e = 0; $e < count($electricPotentialsIndex); $e++)
                                 {
-                                    $value = round(1 - $electricFieldStrengthsIndex[$e][1] / (count($electricFieldStrengthsIndex) - 1), 2);
-                                    
-                                    if($value < 0.1)
-                                    {
-                                        $value1 = 0;
-                                        $value2 = 0.1;
-                                        $color1 = array(143, 0, 0);
-                                        $color2 = array(200, 0, 0);
-                                    }
-
-                                    else if($value < 0.3)
-                                    {
-                                        $value1 = 0.1;
-                                        $value2 = 0.3;
-                                        $color1 = array(200, 0, 0);
-                                        $color2 = array(255, 255, 0);
-                                    }
-                                    
-                                    else if($value < 0.5)
-                                    {
-                                        $value1 = 0.3;
-                                        $value2 = 0.5;
-                                        $color1 = array(255, 255, 0);
-                                        $color2 = array(0, 218, 21);
-                                    }
-                                    
-                                    else if($value < 0.7)
-                                    {
-                                        $value1 = 0.5;
-                                        $value2 = 0.7;
-                                        $color1 = array(0, 218, 21);
-                                        $color2 = array(0, 17, 164);
-                                    }
-                                    
-                                    else if($value < 0.9)
-                                    {
-                                        $value1 = 0.7;
-                                        $value2 = 0.9;
-                                        $color1 = array(0, 17, 164);
-                                        $color2 = array(84, 0, 112);
-                                    }
-                                    
-                                    else
-                                    {
-                                        $value1 = 0.9;
-                                        $value2 = 1;
-                                        $color1 = array(84, 0, 112);
-                                        $color2 = array(47, 0, 62);
-                                    }
-                                    
-                                    $color = array();
-                                    $interpolation = ($value - $value1) / ($value2 - $value1);
+                                    $pixel = HSLToRGB(240 * (1 - $electricPotentialsIndex[$e][1] / (count($electricPotentialsIndex) - 1)), 1, 0.5);
                                     
                                     for($c = 0; $c < 3; $c++)
                                     {
-                                        array_push($color, round(interpolate($color1[$c], $color2[$c], $interpolation)));
+                                        array_push($pixels, $pixel[$c]);
                                     }
-                                    
-                                    array_push($pixels, $color[0], $color[1], $color[2]);
                                 }
                                 
                                 $image->importImagePixels(0, $height, $width, $height, 'RGB', Imagick::PIXEL_CHAR, $pixels);
@@ -1169,9 +1190,58 @@ function interpolate($startingValue, $endingValue, $interpolation)
     return ($startingValue + ($endingValue - $startingValue) * $interpolation);
 }
 
-function comparison($a, $b)
+function HSLToRGB($h, $s, $l)
 {
-    
+	$c = (1 - abs(2 * $l - 1)) * $s;
+	$x = $c * (1 - abs(fmod(($h / 60), 2) - 1));
+	$m = $l - ($c / 2);
+	
+	if($h < 60)
+	{
+		$r = $c;
+		$g = $x;
+		$b = 0;
+	}
+	
+	else if($h < 120)
+	{
+		$r = $x;
+		$g = $c;
+		$b = 0;
+	}
+	
+	else if($h < 180)
+	{
+		$r = 0;
+		$g = $c;
+		$b = $x;
+	}
+	
+	else if($h < 240)
+	{
+		$r = 0;
+		$g = $x;
+		$b = $c;
+	}
+	
+	else if($h < 300)
+	{
+		$r = $x;
+		$g = 0;
+		$b = $c;
+	}
+	
+	else
+	{
+		$r = $c;
+		$g = 0;
+		$b = $x;
+	}
+	
+	$r = 255 * ($r + $m);
+	$g = 255 * ($g + $m);
+	$b = 255 * ($b + $m);
+    return array($r, $g, $b);
 }
 
 function virtualPositionToScreenCoordinates($position)
