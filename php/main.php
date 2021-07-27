@@ -72,6 +72,26 @@ class Point
         return $this;
     }
     
+    function rotate($r)
+    {
+        $cos = cos($r);
+        $sin = sin($r);
+        $this->x = $cos * $this->x - $sin * $this->y;
+        $this->y = $sin * $this->x + $cos * $this->y;
+        return $this;
+    }
+    
+    function rotateAround($p, $r)
+    {
+        $cos = cos($r);
+        $sin = sin($r);
+        $dx = $this->x - $p->x;
+        $dy = $this->y - $p->y;
+        $this->x = $cos * $dx - $sin * $dy + $p->x;
+        $this->y = $sin * $dx + $cos * $dy + $p->y;
+        return $this;
+    }
+    
     function normalize()
     {
         return $this->divideBy($this->getMagnitude());
@@ -313,38 +333,37 @@ class FiniteLineCharge
         $relativePositionEndpoint2 = $relativePositionEndpoint1 + $distanceBetweenEndpoints;
         $squaredDistanceToEndpoint1 = $point->getSquaredDistanceTo($this->endpoint1);
         $squaredDistanceToEndpoint2 = $point->getSquaredDistanceTo($this->endpoint2);
+        $distanceToEndpoint1 = sqrt($squaredDistanceToEndpoint1);
+        $distanceToEndpoint2 = sqrt($squaredDistanceToEndpoint2);
         $distanceToProjection = sqrt(abs($squaredDistanceToEndpoint1 - pow($relativePositionEndpoint1, 2)));
         $chargeDensity = $this->charge / $distanceBetweenEndpoints;
         
-        if($distanceToProjection == 0)
+        if($distanceToProjection == 0 || abs($relativePositionEndpoint1) == $distanceToEndpoint1 || abs($relativePositionEndpoint2) == $distanceToEndpoint2)
         {
             if($relativePositionEndpoint1 < 0 && $relativePositionEndpoint2 < 0)
             {
                 return 8.9875517923E9 * $chargeDensity * log($relativePositionEndpoint1 / $relativePositionEndpoint2);
             }
             
-            if($relativePositionEndpoint1 <= 0 && $relativePositionEndpoint2 >= 0)
+            else if($relativePositionEndpoint1 <= 0 && $relativePositionEndpoint2 >= 0)
             {
                 return $this->charge * INF;
             }
             
-            if($relativePositionEndpoint1 > 0 && $relativePositionEndpoint2 > 0)
+            else if($relativePositionEndpoint1 > 0 && $relativePositionEndpoint2 > 0)
             {
                 return 8.9875517923E9 * $chargeDensity * log($relativePositionEndpoint2 / $relativePositionEndpoint1);
             }
         }
         
-        $distanceToEndpoint1 = sqrt($squaredDistanceToEndpoint1);
-        $distanceToEndpoint2 = sqrt($squaredDistanceToEndpoint2);
-        
-        if($relativePositionEndpoint1 > 0 && $relativePositionEndpoint2 > 0)
+        if($relativePositionEndpoint1 < 0 && $relativePositionEndpoint2 < 0)
         {
-            return 8.9875517923E9 * $chargeDensity * log(($relativePositionEndpoint2 + $distanceToEndpoint2) / ($relativePositionEndpoint1 + $distanceToEndpoint1));
+            return 8.9875517923E9 * $chargeDensity * log(($distanceToEndpoint1 - $relativePositionEndpoint1) / ($distanceToEndpoint2 - $relativePositionEndpoint2));
         }
         
         else
         {
-            return 8.9875517923E9 * $chargeDensity * log(abs(($distanceToEndpoint1 - $relativePositionEndpoint1) / ($distanceToEndpoint2 - $relativePositionEndpoint2)));
+            return 8.9875517923E9 * $chargeDensity * log(($relativePositionEndpoint2 + $distanceToEndpoint2) / ($relativePositionEndpoint1 + $distanceToEndpoint1));
         }
     }
 }
@@ -508,20 +527,20 @@ if(!empty(file_get_contents('php://input')))
             $dataInput = $data->input;
             $dataOutput = $data->output;
             
-            if(property_exists($dataInput, 'charges') && property_exists($dataInput, 'flashlights') && property_exists($dataOutput, 'maximumIterationsPerFieldLine') && property_exists($dataOutput, 'stepPerIteration') && property_exists($dataOutput, 'minimumX') && property_exists($dataOutput, 'minimumY') && property_exists($dataOutput, 'maximumX') && property_exists($dataOutput, 'maximumY'));
+            if(property_exists($dataInput, 'charges') && property_exists($dataInput, 'flashlights') && property_exists($dataOutput, 'maximumIterationsPerFieldLine') && property_exists($dataOutput, 'stepPerFieldLineIteration') && property_exists($dataOutput, 'minimumX') && property_exists($dataOutput, 'minimumY') && property_exists($dataOutput, 'maximumX') && property_exists($dataOutput, 'maximumY'));
             {
                 $dataCharges = $dataInput->charges;
                 $dataFlashlights = $dataInput->flashlights;
                 $dataMaximumIterationsPerFieldLine = $dataOutput->maximumIterationsPerFieldLine;
-                $dataStepPerIteration = $dataOutput->stepPerIteration;
+                $dataStepPerFieldLineIteration = $dataOutput->stepPerFieldLineIteration;
                 $dataMinimumX = $dataOutput->minimumX;
                 $dataMinimumY = $dataOutput->minimumY;
                 $dataMaximumX = $dataOutput->maximumX;
                 $dataMaximumY = $dataOutput->maximumY;
                 
-                if(is_array($dataCharges) && is_array($dataFlashlights) && is_int($dataMaximumIterationsPerFieldLine) && (is_int($dataStepPerIteration) || is_float($dataStepPerIteration)) && (is_int($dataMinimumX) || is_float($dataMinimumX)) && (is_int($dataMinimumY) || is_float($dataMinimumY)) && (is_int($dataMaximumX) || is_float($dataMaximumX)) && (is_int($dataMaximumY) || is_float($dataMaximumY)))
+                if(is_array($dataCharges) && is_array($dataFlashlights) && is_int($dataMaximumIterationsPerFieldLine) && (is_int($dataStepPerFieldLineIteration) || is_float($dataStepPerFieldLineIteration)) && (is_int($dataMinimumX) || is_float($dataMinimumX)) && (is_int($dataMinimumY) || is_float($dataMinimumY)) && (is_int($dataMaximumX) || is_float($dataMaximumX)) && (is_int($dataMaximumY) || is_float($dataMaximumY)))
                 {
-                    if(count($dataCharges) <= 100 && count($dataFlashlights) <= 100 && $dataMaximumIterationsPerFieldLine >= 0 && $dataMaximumIterationsPerFieldLine <= 1000000 && $dataStepPerIteration >= 1E-100 && $dataStepPerIteration <= 1E100 && $dataMinimumX < $dataMaximumX && $dataMinimumX >= -1E100 && $dataMaximumX <= 1E100 && $dataMinimumY < $dataMaximumY && $dataMinimumY >= -1E100 && $dataMaximumY <= 1E100)
+                    if(count($dataCharges) <= 100 && count($dataFlashlights) <= 100 && $dataMaximumIterationsPerFieldLine >= 0 && $dataMaximumIterationsPerFieldLine <= 1000000 && $dataStepPerFieldLineIteration >= 1E-100 && $dataStepPerFieldLineIteration <= 1E100 && $dataMinimumX >= -1E100 && $dataMinimumY >= -1E100 && $dataMaximumX <= 1E100 && $dataMaximumY <= 1E100 && $dataMaximumX - $dataMinimumX >= 1E-100 && $dataMaximumY - $dataMinimumY >= 1E-100)
                     {
                         $dataChargesValid = true;
                         
@@ -558,7 +577,41 @@ if(!empty(file_get_contents('php://input')))
                                         {
                                             if((is_int($dataCharge->endpoint1->x) || is_float($dataCharge->endpoint1->x)) && (is_int($dataCharge->endpoint1->y) || is_float($dataCharge->endpoint1->y)) && (is_int($dataCharge->endpoint2->x) || is_float($dataCharge->endpoint2->x)) && (is_int($dataCharge->endpoint2->y) || is_float($dataCharge->endpoint2->y)) && ($dataCharge->endpoint1->x != $dataCharge->endpoint2->x || $dataCharge->endpoint1->y != $dataCharge->endpoint2->y))
                                             {
-                                                if(abs($dataCharge->endpoint1->x) <= 1E100 && abs($dataCharge->endpoint1->y) <= 1E100 && abs($dataCharge->endpoint2->x) <= 1E100 && abs($dataCharge->endpoint2->y) <= 1E100)
+                                                if(abs($dataCharge->endpoint1->x) <= 1E100 && abs($dataCharge->endpoint1->y) <= 1E100 && abs($dataCharge->endpoint2->x) <= 1E100 && abs($dataCharge->endpoint2->y) <= 1E100 && (abs($dataCharge->endpoint1->x - $dataCharge->endpoint2->x) >= 1E-100 || abs($dataCharge->endpoint1->y - $dataCharge->endpoint2->y) >= 1E-100))
+                                                {
+                                                    $dataChargeValid = true;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                else if($dataCharge->type === 'Square')
+                                {
+                                    if(property_exists($dataCharge, 'position') && property_exists($dataCharge, 'width') && property_exists($dataCharge, 'rotation'))
+                                    {
+                                        if(property_exists($dataCharge->position, 'x') && property_exists($dataCharge->position, 'y'))
+                                        {
+                                            if((is_int($dataCharge->position->x) || is_float($dataCharge->position->x)) && (is_int($dataCharge->position->y) || is_float($dataCharge->position->y)) && (is_int($dataCharge->width) || is_float($dataCharge->width)) && (is_int($dataCharge->rotation) || is_float($dataCharge->rotation)))
+                                            {
+                                                if(abs($dataCharge->position->x) <= 1E100 && abs($dataCharge->position->y) <= 1E100 && $dataCharge->width > 0 && $dataCharge->width <= 1E100 && abs($dataCharge->rotation) <= 1E100)
+                                                {
+                                                    $dataChargeValid = true;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                else if($dataCharge->type === 'Regular Polygon')
+                                {
+                                    if(property_exists($dataCharge, 'position') && property_exists($dataCharge, 'sides') && property_exists($dataCharge, 'radius') && property_exists($dataCharge, 'rotation'))
+                                    {
+                                        if(property_exists($dataCharge->position, 'x') && property_exists($dataCharge->position, 'y'))
+                                        {
+                                            if((is_int($dataCharge->position->x) || is_float($dataCharge->position->x)) && (is_int($dataCharge->position->y) || is_float($dataCharge->position->y)) && is_int($dataCharge->sides) && (is_int($dataCharge->radius) || is_float($dataCharge->radius)) && (is_int($dataCharge->rotation) || is_float($dataCharge->rotation)))
+                                            {
+                                                if(abs($dataCharge->position->x) <= 1E100 && abs($dataCharge->position->y) <= 1E100 && $dataCharge->sides >= 3 && $dataCharge->radius > 0 && $dataCharge->radius <= 1E100 && abs($dataCharge->rotation) <= 1E100)
                                                 {
                                                     $dataChargeValid = true;
                                                 }
@@ -604,9 +657,9 @@ if(!empty(file_get_contents('php://input')))
                                         {
                                             if(property_exists($dataFlashlight->endpoint1, 'x') && property_exists($dataFlashlight->endpoint1, 'y') && property_exists($dataFlashlight->endpoint2, 'x') && property_exists($dataFlashlight->endpoint2, 'y'))
                                             {
-                                                if((is_int($dataFlashlight->endpoint1->x) || is_float($dataFlashlight->endpoint1->x)) && (is_int($dataFlashlight->endpoint1->y) || is_float($dataFlashlight->endpoint1->y)) && (is_int($dataFlashlight->endpoint2->x) || is_float($dataFlashlight->endpoint2->x)) && (is_int($dataFlashlight->endpoint2->y) || is_float($dataFlashlight->endpoint2->y)) && ($dataFlashlight->endpoint1->x != $dataFlashlight->endpoint2->x || $dataFlashlight->endpoint1->y != $dataFlashlight->endpoint2->y))
+                                                if((is_int($dataFlashlight->endpoint1->x) || is_float($dataFlashlight->endpoint1->x)) && (is_int($dataFlashlight->endpoint1->y) || is_float($dataFlashlight->endpoint1->y)) && (is_int($dataFlashlight->endpoint2->x) || is_float($dataFlashlight->endpoint2->x)) && (is_int($dataFlashlight->endpoint2->y) || is_float($dataFlashlight->endpoint2->y)))
                                                 {
-                                                    if(abs($dataFlashlight->endpoint1->x) <= 1E100 && abs($dataFlashlight->endpoint1->y) <= 1E100 && abs($dataFlashlight->endpoint2->x) <= 1E100 && abs($dataFlashlight->endpoint2->y) <= 1E100)
+                                                    if(abs($dataFlashlight->endpoint1->x) <= 1E100 && abs($dataFlashlight->endpoint1->y) <= 1E100 && abs($dataFlashlight->endpoint2->x) <= 1E100 && abs($dataFlashlight->endpoint2->y) <= 1E100 && (abs($dataFlashlight->endpoint1->x - $dataFlashlight->endpoint2->x) >= 1E-100 || abs($dataFlashlight->endpoint1->y - $dataFlashlight->endpoint2->y) >= 1E-100))
                                                     {
                                                         $dataFlashlightValid = true;
                                                     }
@@ -640,7 +693,7 @@ if(!empty(file_get_contents('php://input')))
                                             {
                                                 if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)))
                                                 {
-                                                    if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && $dataFlashlight->radius > 0 && $dataFlashlight->radius <= 1E100 && $dataFlashlight->startingAngle >= 0 && $dataFlashlight->endingAngle <= 360 && $dataFlashlight->startingAngle < $dataFlashlight->endingAngle)
+                                                    if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && $dataFlashlight->radius > 0 && $dataFlashlight->radius <= 1E100 && $dataFlashlight->startingAngle >= 0 && $dataFlashlight->endingAngle <= 360 && $dataFlashlight->endingAngle - $dataFlashlight->startingAngle >= 1E-100)
                                                     {
                                                         $dataFlashlightValid = true;
                                                     }
@@ -676,15 +729,39 @@ if(!empty(file_get_contents('php://input')))
                                     
                                     if($dataCharge->type === 'Point')
                                     {
-                                        $charge = new PointCharge($dataCharge->charge, new Point($dataCharge->position->x, $dataCharge->position->y));
+                                        array_push($charges, new PointCharge($dataCharge->charge, new Point($dataCharge->position->x, $dataCharge->position->y)));
                                     }
                                     
                                     else if($dataCharge->type === 'Finite Line')
                                     {
-                                        $charge = new FiniteLineCharge($dataCharge->charge, new Point($dataCharge->endpoint1->x, $dataCharge->endpoint1->y), new Point($dataCharge->endpoint2->x, $dataCharge->endpoint2->y));
+                                        array_push($charges, new FiniteLineCharge($dataCharge->charge, new Point($dataCharge->endpoint1->x, $dataCharge->endpoint1->y), new Point($dataCharge->endpoint2->x, $dataCharge->endpoint2->y)));
                                     }
                                     
-                                    array_push($charges, $charge);
+                                    else if($dataCharge->type === 'Square')
+                                    {
+                                        $center = new Point($dataCharge->position->x, $dataCharge->position->y);
+                                        $topLeft = $center->copy()->addToCoordinates(-$dataCharge->width / 2, $dataCharge->width / 2)->rotateAround($center, pi() / 180 * $dataCharge->rotation);
+                                        $topRight = $center->copy()->addToCoordinates($dataCharge->width / 2, $dataCharge->width / 2)->rotateAround($center, pi() / 180 * $dataCharge->rotation);
+                                        $bottomRight = $center->copy()->addToCoordinates($dataCharge->width / 2, -$dataCharge->width / 2)->rotateAround($center, pi() / 180 * $dataCharge->rotation);
+                                        $bottomLeft = $center->copy()->addToCoordinates(-$dataCharge->width / 2, -$dataCharge->width / 2)->rotateAround($center, pi() / 180 * $dataCharge->rotation);
+                                        array_push($charges, new FiniteLineCharge($dataCharge->charge / 4, $topLeft, $topRight), new FiniteLineCharge($dataCharge->charge / 4, $topRight, $bottomRight), new FiniteLineCharge($dataCharge->charge / 4, $bottomRight, $bottomLeft), new FiniteLineCharge($dataCharge->charge / 4, $bottomLeft, $topLeft));
+                                    }
+                                    
+                                    else if($dataCharge->type === 'Regular Polygon')
+                                    {
+                                        $center = new Point($dataCharge->position->x, $dataCharge->position->y);
+                                        $vertices = array();
+                                        
+                                        for($v = 0; $v < $dataCharge->sides; $v++)
+                                        {
+                                            array_push($vertices, $center->copy()->addToPolar($dataCharge->radius, pi() * (2 * $v / $dataCharge->sides + $dataCharge->rotation / 180 + 1 / 2)));
+                                        }
+                                        
+                                        for($s = 0; $s < $dataCharge->sides; $s++)
+                                        {
+                                            array_push($charges, new FiniteLineCharge($dataCharge->charge / $dataCharge->sides, $vertices[$s], $vertices[($s + 1) % $dataCharge->sides]));
+                                        }
+                                    }
                                 }
                                 
                                 $flashlights = array();
@@ -714,7 +791,7 @@ if(!empty(file_get_contents('php://input')))
                                 $collection = new Collection($charges, $flashlights);
                                 
                                 $maximumIterationsPerFieldLine = $dataMaximumIterationsPerFieldLine;
-                                $stepPerIteration = $dataStepPerIteration;
+                                $stepPerFieldLineIteration = $dataStepPerFieldLineIteration;
                                 $width = 1000;
                                 $height = 1000;
                                 $minimumX = $dataMinimumX;
@@ -782,7 +859,7 @@ if(!empty(file_get_contents('php://input')))
                                                 
                                                 $previousFieldAtPoint = $fieldAtPoint->copy();
                                                 $normalizedFieldAtPoint = $fieldAtPoint->normalize();
-                                                $fieldLinePosition->addTo($normalizedFieldAtPoint->multiplyBy($stepPerIteration)->multiplyBy($d));
+                                                $fieldLinePosition->addTo($normalizedFieldAtPoint->multiplyBy($stepPerFieldLineIteration)->multiplyBy($d));
                                                 $screenCoordinates = virtualPositionToScreenCoordinates($fieldLinePosition);
                                                 $electricFieldDraw->pathLineToAbsolute($screenCoordinates[0], $screenCoordinates[1]);
                                             }
@@ -898,14 +975,14 @@ if(!empty(file_get_contents('php://input')))
                                     {
                                         $screenCoordinates1 = virtualPositionToScreenCoordinates($flashlight->position->copy()->subtractToCoordinates($flashlight->radius, $flashlight->radius));
                                         $screenCoordinates2 = virtualPositionToScreenCoordinates($flashlight->position->copy()->addToCoordinates($flashlight->radius, $flashlight->radius));
-                                        $elementsDraw->arc(max($screenCoordinates1[0], -100 * $width), max($screenCoordinates1[1], -100 * $height), min($screenCoordinates2[0], 101 * $width), min($screenCoordinates2[1], 101 * $height), 0, 360);
+                                        $elementsDraw->arc(min(max($screenCoordinates1[0], -100 * $width), 101 * $width), min(max($screenCoordinates1[1], -100 * $height), 101 * $height), min(max($screenCoordinates2[0], -100 * $width), 101 * $width), min(max($screenCoordinates2[1], -100 * $height), 101 * $height), 0, 360);
                                     }
                                     
                                     if(get_class($flashlight) === 'CircularArcFlashlight')
                                     {
                                         $screenCoordinates1 = virtualPositionToScreenCoordinates($flashlight->position->copy()->subtractToCoordinates($flashlight->radius, $flashlight->radius));
                                         $screenCoordinates2 = virtualPositionToScreenCoordinates($flashlight->position->copy()->addToCoordinates($flashlight->radius, $flashlight->radius));
-                                        $elementsDraw->arc(max($screenCoordinates1[0], -100 * $width), max($screenCoordinates1[1], -100 * $height), min($screenCoordinates2[0], 101 * $width), min($screenCoordinates2[1], 101 * $height), 180 / pi() * $flashlight->startingAngle, 180 / pi() * $flashlight->endingAngle);
+                                        $elementsDraw->arc(min(max($screenCoordinates1[0], -100 * $width), 101 * $width), min(max($screenCoordinates1[1], -100 * $height), 101 * $height), min(max($screenCoordinates2[0], -100 * $width), 101 * $width), min(max($screenCoordinates2[1], -100 * $height), 101 * $height), 180 / pi() * $flashlight->startingAngle, 180 / pi() * $flashlight->endingAngle);
                                     }
                                     
                                     $elementsDraw->setStrokeOpacity(0);

@@ -58,7 +58,7 @@
     "output":
     {
         "maximumIterationsPerFieldLine": 1500,
-        "stepPerIteration": 0.002,
+        "stepPerFieldLineIteration": 0.002,
         "minimumX": 0,
         "minimumY": 0,
         "maximumX": 1,

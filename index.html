@@ -52,7 +52,7 @@
                 <h2 class="tab1">Output: Contains the data that is used for displaying the result</h2>
                 <p class="tab2">
                     <mark class="lowlight">Maximum Iterations Per Field Line</mark>: The maximum number of calculations for each field line which helps prevent unnecessary computation<br>
-                    <mark class="lowlight">Step Per Iteration</mark>: The step traveled by each field line in meters before and after every calculation<br>
+                    <mark class="lowlight">Step Per Field Line Iteration</mark>: The step traveled by each field line in meters before and after every calculation<br>
                     <mark class="lowlight">MinimumX</mark>: The minimum x-value in meters that is displayed by the viewport<br>
                     <mark class="lowlight">MinimumY</mark>: The minimum y-value in meters that is displayed by the viewport<br>
                     <mark class="lowlight">MaximumX</mark>: The maximum x-value in meters that is displayed by the viewport<br>
@@ -62,13 +62,14 @@
                 <h3 class="tab1">
                     Charges: <mark class="lowlight">Coulombs (C)<br></mark>
                     Electric Fields: <mark class="lowlight">Newtons / Coulomb (N/C)<br></mark>
-                    Distances, Coordinates: <mark class="lowlight">meters (m)</mark>
+                    Distances, coordinates: <mark class="lowlight">meters (m)</mark>
                 </h3>
             <h1><mark class="highlight">Rules</mark></h1>
                 <h3 class="tab1">
                     Number of charges is less than or equal to <mark class="lowlight">100</mark><br>
                     Number of flashlights is less than or equal to <mark class="lowlight">100</mark><br>
-                    Total Number of Field Lines &#215; Maximum Iterations Per Field Line &#215; Number of Charges is less than or equal to <mark class="lowlight">1,000,000</mark>
+                    Total number of field lines is less than or equal to <mark class="lowlight">1000</mark><br>
+                    Total number of field lines &#215; Maximum Iterations Per Field Line &#215; Number of Charges is less than or equal to <mark class="lowlight">1,000,000</mark>
                 </h3>
         </div>
         <style>
@@ -103,7 +104,7 @@
                 border-radius: 5px;
                 padding: 10px;
                 transform: perspective(1px) translateZ(0);
-                transition: 0.3s;
+                transition: transform 0.3s;
             }
             
             #button:hover
