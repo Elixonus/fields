@@ -542,7 +542,7 @@ if(!empty(file_get_contents('php://input')))
                 {
                     if(count($dataCharges) <= 100 && count($dataFlashlights) <= 100 && $dataMaximumIterationsPerFieldLine >= 0 && $dataMaximumIterationsPerFieldLine <= 1000000 && $dataStepPerFieldLineIteration >= 1E-100 && $dataStepPerFieldLineIteration <= 1E100 && $dataMinimumX >= -1E100 && $dataMinimumY >= -1E100 && $dataMaximumX <= 1E100 && $dataMaximumY <= 1E100 && $dataMaximumX - $dataMinimumX >= 1E-100 && $dataMaximumY - $dataMinimumY >= 1E-100)
                     {
-                        $dataChargesValid = true;
+                        $chargesValid = true;
                         
                         for($c = 0; $c < count($dataCharges); $c++)
                         {
@@ -550,97 +550,96 @@ if(!empty(file_get_contents('php://input')))
                             
                             if(property_exists($dataCharge, 'type') && property_exists($dataCharge, 'charge'))
                             {
-                                $dataChargeValid = false;
-                                
-                                if($dataCharge->type === 'Point')
+                                if((is_int($dataCharge->charge) || is_float($dataCharge->charge)))
                                 {
-                                    if(property_exists($dataCharge, 'position'))
+                                    if(abs($dataCharge->charge) <= 1E100)
                                     {
-                                        if(property_exists($dataCharge->position, 'x') && property_exists($dataCharge->position, 'y'))
+                                        if($dataCharge->type === 'Point')
                                         {
-                                            if((is_int($dataCharge->position->x) || is_float($dataCharge->position->x)) && (is_int($dataCharge->position->y) || is_float($dataCharge->position->y)))
+                                            if(property_exists($dataCharge, 'position'))
                                             {
-                                                if(abs($dataCharge->position->x) <= 1E100 && abs($dataCharge->position->y) <= 1E100)
+                                                if(property_exists($dataCharge->position, 'x') && property_exists($dataCharge->position, 'y'))
                                                 {
-                                                    $dataChargeValid = true;
+                                                    if((is_int($dataCharge->position->x) || is_float($dataCharge->position->x)) && (is_int($dataCharge->position->y) || is_float($dataCharge->position->y)))
+                                                    {
+                                                        if(abs($dataCharge->position->x) <= 1E100 && abs($dataCharge->position->y) <= 1E100)
+                                                        {
+                                                            continue;
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
-                                }
-                                
-                                else if($dataCharge->type === 'Finite Line')
-                                {
-                                    if(property_exists($dataCharge, 'endpoint1') && property_exists($dataCharge, 'endpoint2'))
-                                    {
-                                        if(property_exists($dataCharge->endpoint1, 'x') && property_exists($dataCharge->endpoint1, 'y') && property_exists($dataCharge->endpoint2, 'x') && property_exists($dataCharge->endpoint2, 'y'))
+                                        
+                                        else if($dataCharge->type === 'Finite Line')
                                         {
-                                            if((is_int($dataCharge->endpoint1->x) || is_float($dataCharge->endpoint1->x)) && (is_int($dataCharge->endpoint1->y) || is_float($dataCharge->endpoint1->y)) && (is_int($dataCharge->endpoint2->x) || is_float($dataCharge->endpoint2->x)) && (is_int($dataCharge->endpoint2->y) || is_float($dataCharge->endpoint2->y)) && ($dataCharge->endpoint1->x != $dataCharge->endpoint2->x || $dataCharge->endpoint1->y != $dataCharge->endpoint2->y))
+                                            if(property_exists($dataCharge, 'endpoint1') && property_exists($dataCharge, 'endpoint2'))
                                             {
-                                                if(abs($dataCharge->endpoint1->x) <= 1E100 && abs($dataCharge->endpoint1->y) <= 1E100 && abs($dataCharge->endpoint2->x) <= 1E100 && abs($dataCharge->endpoint2->y) <= 1E100 && (abs($dataCharge->endpoint1->x - $dataCharge->endpoint2->x) >= 1E-100 || abs($dataCharge->endpoint1->y - $dataCharge->endpoint2->y) >= 1E-100))
+                                                if(property_exists($dataCharge->endpoint1, 'x') && property_exists($dataCharge->endpoint1, 'y') && property_exists($dataCharge->endpoint2, 'x') && property_exists($dataCharge->endpoint2, 'y'))
                                                 {
-                                                    $dataChargeValid = true;
+                                                    if((is_int($dataCharge->endpoint1->x) || is_float($dataCharge->endpoint1->x)) && (is_int($dataCharge->endpoint1->y) || is_float($dataCharge->endpoint1->y)) && (is_int($dataCharge->endpoint2->x) || is_float($dataCharge->endpoint2->x)) && (is_int($dataCharge->endpoint2->y) || is_float($dataCharge->endpoint2->y)) && ($dataCharge->endpoint1->x != $dataCharge->endpoint2->x || $dataCharge->endpoint1->y != $dataCharge->endpoint2->y))
+                                                    {
+                                                        if(abs($dataCharge->endpoint1->x) <= 1E100 && abs($dataCharge->endpoint1->y) <= 1E100 && abs($dataCharge->endpoint2->x) <= 1E100 && abs($dataCharge->endpoint2->y) <= 1E100 && (abs($dataCharge->endpoint1->x - $dataCharge->endpoint2->x) >= 1E-100 || abs($dataCharge->endpoint1->y - $dataCharge->endpoint2->y) >= 1E-100))
+                                                        {
+                                                            continue;
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
-                                }
-                                
-                                else if($dataCharge->type === 'Square')
-                                {
-                                    if(property_exists($dataCharge, 'position') && property_exists($dataCharge, 'width') && property_exists($dataCharge, 'rotation'))
-                                    {
-                                        if(property_exists($dataCharge->position, 'x') && property_exists($dataCharge->position, 'y'))
+                                        
+                                        else if($dataCharge->type === 'Square')
                                         {
-                                            if((is_int($dataCharge->position->x) || is_float($dataCharge->position->x)) && (is_int($dataCharge->position->y) || is_float($dataCharge->position->y)) && (is_int($dataCharge->width) || is_float($dataCharge->width)) && (is_int($dataCharge->rotation) || is_float($dataCharge->rotation)))
+                                            if(property_exists($dataCharge, 'position') && property_exists($dataCharge, 'width') && property_exists($dataCharge, 'rotation'))
                                             {
-                                                if(abs($dataCharge->position->x) <= 1E100 && abs($dataCharge->position->y) <= 1E100 && $dataCharge->width > 0 && $dataCharge->width <= 1E100 && abs($dataCharge->rotation) <= 1E100)
+                                                if(property_exists($dataCharge->position, 'x') && property_exists($dataCharge->position, 'y'))
                                                 {
-                                                    $dataChargeValid = true;
+                                                    if((is_int($dataCharge->position->x) || is_float($dataCharge->position->x)) && (is_int($dataCharge->position->y) || is_float($dataCharge->position->y)) && (is_int($dataCharge->width) || is_float($dataCharge->width)) && (is_int($dataCharge->rotation) || is_float($dataCharge->rotation)))
+                                                    {
+                                                        if(abs($dataCharge->position->x) <= 1E100 && abs($dataCharge->position->y) <= 1E100 && $dataCharge->width > 0 && $dataCharge->width <= 1E100 && abs($dataCharge->rotation) <= 1E100)
+                                                        {
+                                                            continue;
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
-                                }
-                                
-                                else if($dataCharge->type === 'Regular Polygon')
-                                {
-                                    if(property_exists($dataCharge, 'position') && property_exists($dataCharge, 'sides') && property_exists($dataCharge, 'radius') && property_exists($dataCharge, 'rotation'))
-                                    {
-                                        if(property_exists($dataCharge->position, 'x') && property_exists($dataCharge->position, 'y'))
+                                        
+                                        else if($dataCharge->type === 'Regular Polygon')
                                         {
-                                            if((is_int($dataCharge->position->x) || is_float($dataCharge->position->x)) && (is_int($dataCharge->position->y) || is_float($dataCharge->position->y)) && is_int($dataCharge->sides) && (is_int($dataCharge->radius) || is_float($dataCharge->radius)) && (is_int($dataCharge->rotation) || is_float($dataCharge->rotation)))
+                                            if(property_exists($dataCharge, 'position') && property_exists($dataCharge, 'sides') && property_exists($dataCharge, 'radius') && property_exists($dataCharge, 'rotation'))
                                             {
-                                                if(abs($dataCharge->position->x) <= 1E100 && abs($dataCharge->position->y) <= 1E100 && $dataCharge->sides >= 3 && $dataCharge->radius > 0 && $dataCharge->radius <= 1E100 && abs($dataCharge->rotation) <= 1E100)
+                                                if(property_exists($dataCharge->position, 'x') && property_exists($dataCharge->position, 'y'))
                                                 {
-                                                    $dataChargeValid = true;
+                                                    if((is_int($dataCharge->position->x) || is_float($dataCharge->position->x)) && (is_int($dataCharge->position->y) || is_float($dataCharge->position->y)) && is_int($dataCharge->sides) && (is_int($dataCharge->radius) || is_float($dataCharge->radius)) && (is_int($dataCharge->rotation) || is_float($dataCharge->rotation)))
+                                                    {
+                                                        if(abs($dataCharge->position->x) <= 1E100 && abs($dataCharge->position->y) <= 1E100 && $dataCharge->sides >= 3 && $dataCharge->radius > 0 && $dataCharge->radius <= 1E100 && abs($dataCharge->rotation) <= 1E100)
+                                                        {
+                                                            continue;
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
-                                }
-                                
-                                if($dataChargeValid)
-                                {
-                                    $dataChargeValue = $dataCharge->charge;
-                                    
-                                    if((is_int($dataChargeValue) || is_float($dataChargeValue)))
-                                    {
-                                        if(abs($dataChargeValue) <= 1E100)
+                                        
+                                        else if($dataCharge->type === 'Shape')
                                         {
-                                            continue;
+                                            if(property_exists($dataCharge, 'name') && property_exists($dataCharge, 'position') && property_exists($dataCharge, 'scale') && property_exists($dataCharge, 'rotation'))
+                                            {
+                                                // shape link code
+                                            }
                                         }
                                     }
                                 }
                             }
                             
-                            $dataChargesValid = false;
+                            $chargesValid = false;
                             break;
                         }
                         
-                        if($dataChargesValid)
+                        if($chargesValid)
                         {
-                            $dataFlashlightsValid = true;
+                            $flashlightsValid = true;
                             $totalNumberOfFieldLines = 0;
                             
                             for($f = 0; $f < count($dataFlashlights); $f++)
@@ -649,77 +648,74 @@ if(!empty(file_get_contents('php://input')))
                                 
                                 if(property_exists($dataFlashlight, 'type') && property_exists($dataFlashlight, 'numberOfFieldLines'))
                                 {
-                                    $dataFlashlightValid = false;
-                                    
-                                    if($dataFlashlight->type === 'Line Segment')
+                                    if(is_int($dataFlashlight->numberOfFieldLines))
                                     {
-                                        if(property_exists($dataFlashlight, 'endpoint1') && property_exists($dataFlashlight, 'endpoint2'))
+                                        if($dataFlashlight->numberOfFieldLines >= 0 && $dataFlashlight->numberOfFieldLines <= 1000)
                                         {
-                                            if(property_exists($dataFlashlight->endpoint1, 'x') && property_exists($dataFlashlight->endpoint1, 'y') && property_exists($dataFlashlight->endpoint2, 'x') && property_exists($dataFlashlight->endpoint2, 'y'))
+                                            $totalNumberOfFieldLines += $dataFlashlight->numberOfFieldLines;
+                                            
+                                            if($totalNumberOfFieldLines <= 1000)
                                             {
-                                                if((is_int($dataFlashlight->endpoint1->x) || is_float($dataFlashlight->endpoint1->x)) && (is_int($dataFlashlight->endpoint1->y) || is_float($dataFlashlight->endpoint1->y)) && (is_int($dataFlashlight->endpoint2->x) || is_float($dataFlashlight->endpoint2->x)) && (is_int($dataFlashlight->endpoint2->y) || is_float($dataFlashlight->endpoint2->y)))
+                                                if($dataFlashlight->type === 'Line Segment')
                                                 {
-                                                    if(abs($dataFlashlight->endpoint1->x) <= 1E100 && abs($dataFlashlight->endpoint1->y) <= 1E100 && abs($dataFlashlight->endpoint2->x) <= 1E100 && abs($dataFlashlight->endpoint2->y) <= 1E100 && (abs($dataFlashlight->endpoint1->x - $dataFlashlight->endpoint2->x) >= 1E-100 || abs($dataFlashlight->endpoint1->y - $dataFlashlight->endpoint2->y) >= 1E-100))
+                                                    if(property_exists($dataFlashlight, 'endpoint1') && property_exists($dataFlashlight, 'endpoint2'))
                                                     {
-                                                        $dataFlashlightValid = true;
+                                                        if(property_exists($dataFlashlight->endpoint1, 'x') && property_exists($dataFlashlight->endpoint1, 'y') && property_exists($dataFlashlight->endpoint2, 'x') && property_exists($dataFlashlight->endpoint2, 'y'))
+                                                        {
+                                                            if((is_int($dataFlashlight->endpoint1->x) || is_float($dataFlashlight->endpoint1->x)) && (is_int($dataFlashlight->endpoint1->y) || is_float($dataFlashlight->endpoint1->y)) && (is_int($dataFlashlight->endpoint2->x) || is_float($dataFlashlight->endpoint2->x)) && (is_int($dataFlashlight->endpoint2->y) || is_float($dataFlashlight->endpoint2->y)))
+                                                            {
+                                                                if(abs($dataFlashlight->endpoint1->x) <= 1E100 && abs($dataFlashlight->endpoint1->y) <= 1E100 && abs($dataFlashlight->endpoint2->x) <= 1E100 && abs($dataFlashlight->endpoint2->y) <= 1E100 && (abs($dataFlashlight->endpoint1->x - $dataFlashlight->endpoint2->x) >= 1E-100 || abs($dataFlashlight->endpoint1->y - $dataFlashlight->endpoint2->y) >= 1E-100))
+                                                                {
+                                                                    continue;
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
-                                            }
-                                        }
-                                    }
-                                    
-                                    else if($dataFlashlight->type === 'Circle')
-                                    {
-                                        if(property_exists($dataFlashlight, 'position') && property_exists($dataFlashlight, 'radius'))
-                                        {
-                                            if(property_exists($dataFlashlight->position, 'x') && property_exists($dataFlashlight->position, 'y') && (is_int($dataFlashlight->radius) || is_float($dataFlashlight->radius)))
-                                            {
-                                                if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)))
+                                                
+                                                else if($dataFlashlight->type === 'Circle')
                                                 {
-                                                    if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && $dataFlashlight->radius > 0 && $dataFlashlight->radius <= 1E100)
+                                                    if(property_exists($dataFlashlight, 'position') && property_exists($dataFlashlight, 'radius'))
                                                     {
-                                                        $dataFlashlightValid = true;
+                                                        if(property_exists($dataFlashlight->position, 'x') && property_exists($dataFlashlight->position, 'y') && (is_int($dataFlashlight->radius) || is_float($dataFlashlight->radius)))
+                                                        {
+                                                            if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)))
+                                                            {
+                                                                if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && $dataFlashlight->radius > 0 && $dataFlashlight->radius <= 1E100)
+                                                                {
+                                                                    continue;
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
-                                            }
-                                        }
-                                    }
-                                    
-                                    else if($dataFlashlight->type === 'Circular Arc')
-                                    {
-                                        if(property_exists($dataFlashlight, 'position') && property_exists($dataFlashlight, 'radius') && property_exists($dataFlashlight, 'startingAngle') && property_exists($dataFlashlight, 'endingAngle'))
-                                        {
-                                            if(property_exists($dataFlashlight->position, 'x') && property_exists($dataFlashlight->position, 'y') && (is_int($dataFlashlight->radius) || is_float($dataFlashlight->radius)) && (is_int($dataFlashlight->startingAngle) || is_float($dataFlashlight->startingAngle)) && (is_int($dataFlashlight->endingAngle) || is_float($dataFlashlight->endingAngle)))
-                                            {
-                                                if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)))
+                                                
+                                                else if($dataFlashlight->type === 'Circular Arc')
                                                 {
-                                                    if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && $dataFlashlight->radius > 0 && $dataFlashlight->radius <= 1E100 && $dataFlashlight->startingAngle >= 0 && $dataFlashlight->endingAngle <= 360 && $dataFlashlight->endingAngle - $dataFlashlight->startingAngle >= 1E-100)
+                                                    if(property_exists($dataFlashlight, 'position') && property_exists($dataFlashlight, 'radius') && property_exists($dataFlashlight, 'startingAngle') && property_exists($dataFlashlight, 'endingAngle'))
                                                     {
-                                                        $dataFlashlightValid = true;
+                                                        if(property_exists($dataFlashlight->position, 'x') && property_exists($dataFlashlight->position, 'y') && (is_int($dataFlashlight->radius) || is_float($dataFlashlight->radius)) && (is_int($dataFlashlight->startingAngle) || is_float($dataFlashlight->startingAngle)) && (is_int($dataFlashlight->endingAngle) || is_float($dataFlashlight->endingAngle)))
+                                                        {
+                                                            if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)))
+                                                            {
+                                                                if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && $dataFlashlight->radius > 0 && $dataFlashlight->radius <= 1E100 && $dataFlashlight->startingAngle >= 0 && $dataFlashlight->endingAngle <= 360 && $dataFlashlight->endingAngle - $dataFlashlight->startingAngle >= 1E-100)
+                                                                {
+                                                                    continue;
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
-                                            }
-                                        }
-                                    }
-                                    
-                                    if($dataFlashlightValid)
-                                    {
-                                        if(is_int($dataFlashlight->numberOfFieldLines))
-                                        {
-                                            if($dataFlashlight->numberOfFieldLines >= 0 && $dataFlashlight->numberOfFieldLines <= 1000)
-                                            {
-                                                $totalNumberOfFieldLines += $dataFlashlight->numberOfFieldLines;
-                                                continue;
                                             }
                                         }
                                     }
                                 }
                                 
-                                $dataFlashlightsValid = false;
+                                $flashlightsValid = false;
                                 break;
                             }
                             
-                            if($dataFlashlightsValid && $totalNumberOfFieldLines <= 1000 && $totalNumberOfFieldLines * $dataMaximumIterationsPerFieldLine * count($dataCharges) <= 1000000)
+                            if($flashlightsValid && $totalNumberOfFieldLines * $dataMaximumIterationsPerFieldLine * count($dataCharges) <= 1000000)
                             {
                                 $charges = array();
                                 
@@ -802,11 +798,8 @@ if(!empty(file_get_contents('php://input')))
                                 $multiplierY = $height / ($maximumY - $minimumY);
                                 
                                 $image = new Imagick();
-                                $image->newImage($width, 2 * $height, 'white');
+                                $image->newImage($width, $height, 'white');
                                 $image->setImageFormat('png');
-                                
-                                $electricFieldImage = new Imagick();
-                                $electricFieldImage->newImage($width, $height, 'white');
                                 $backgroundDraw = new ImagickDraw();
                                 $backgroundDraw->setFillColor('#fcfaf5');
                                 
@@ -818,7 +811,7 @@ if(!empty(file_get_contents('php://input')))
                                     }
                                 }
                                 
-                                $electricFieldImage->drawImage($backgroundDraw);
+                                $image->drawImage($backgroundDraw);
                                 $backgroundDraw->clear();
                                 $electricFieldDraw = new ImagickDraw();
                                 $electricFieldDraw->affine(array('sx' => 1, 'sy' => -1, 'rx' => 0, 'ry' => 0, 'tx' => 0, 'ty' => $height));
@@ -847,12 +840,12 @@ if(!empty(file_get_contents('php://input')))
                                                     break;
                                                 }
                                                 
-                                                if($fieldAtPoint->x == 0 && $fieldAtPoint->y == 0)
+                                                else if($fieldAtPoint->x == 0 && $fieldAtPoint->y == 0)
                                                 {
                                                     break;
                                                 }
                                                 
-                                                if($l > 0 && $previousFieldAtPoint->getDotProductWith($fieldAtPoint) < 0)
+                                                else if($l > 0 && $previousFieldAtPoint->getDotProductWith($fieldAtPoint) < 0)
                                                 {
                                                     break;
                                                 }
@@ -869,7 +862,7 @@ if(!empty(file_get_contents('php://input')))
                                     }
                                 }
                                 
-                                $electricFieldImage->drawImage($electricFieldDraw);
+                                $image->drawImage($electricFieldDraw);
                                 $electricFieldDraw->clear();
                                 $elementsDraw = new ImagickDraw();
                                 $elementsDraw->affine(array('sx' => 1, 'sy' => -1, 'rx' => 0, 'ry' => 0, 'tx' => 0, 'ty' => $height));
@@ -997,62 +990,10 @@ if(!empty(file_get_contents('php://input')))
                                     }
                                 }
                                 
-                                $electricFieldImage->drawImage($elementsDraw);
+                                $image->drawImage($elementsDraw);
                                 $elementsDraw->clear();
-                                $image->compositeImage($electricFieldImage, Imagick::COMPOSITE_DEFAULT, 0, 0);
-                                $electricFieldImage->clear();
-                                $electricPotentialsCDF = array();
-                                
-                                for($y = $height; $y > 0; $y--)
-                                {
-                                    for($x = 0; $x < $width; $x++)
-                                    {
-                                        $electricPotential = $collection->getElectricPotentialAtPoint(screenCoordinatesToVirtualPosition($x + 0.5, $y + 0.5));
-                                        array_push($electricPotentialsCDF, array(($height - $y) * $width + $x, $electricPotential));
-                                    }
-                                }
-                                
-                                usort($electricPotentialsCDF, function($a, $b) { return $a[1] <=> $b[1]; });
-                                
-                                for($e = 0; $e < count($electricPotentialsCDF); $e++)
-                                {
-                                    $repeatCounter = 1;
-                                    
-                                    while($electricPotentialsCDF[$e][1] == $electricPotentialsCDF[$e + $repeatCounter][1])
-                                    {
-                                        $repeatCounter++;
-                                        
-                                        if($e + $repeatCounter === count($electricPotentialsCDF))
-                                        {
-                                            break;
-                                        }
-                                    }
-                                    
-                                    $e += $repeatCounter - 1;
-                                    
-                                    for($r = 0; $r < $repeatCounter; $r++)
-                                    {
-                                        $electricPotentialsCDF[$e - $r][1] = $e;
-                                    }
-                                }
-                                
-                                $electricPotentialsMinimumCDF = $electricPotentialsCDF[0][1];
-                                usort($electricPotentialsCDF, function($a, $b) { return $a[0] <=> $b[0]; });
-                                
-                                $pixels = array();
-                                
-                                for($e = 0; $e < count($electricPotentialsCDF); $e++)
-                                {
-                                    $pixel = HSLToRGB(240 * (1 - ($electricPotentialsCDF[$e][1] - $electricPotentialsMinimumCDF) / (count($electricPotentialsCDF) - $electricPotentialsMinimumCDF)), 1, 0.5);
-                                    
-                                    for($c = 0; $c < 3; $c++)
-                                    {
-                                        array_push($pixels, $pixel[$c]);
-                                    }
-                                }
-                                
-                                $image->importImagePixels(0, $height, $width, $height, 'RGB', Imagick::PIXEL_CHAR, $pixels);
                                 echo base64_encode($image->getImageBlob());
+                                $image->clear();
                             }
                         }
                     }
