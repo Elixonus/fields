@@ -97,7 +97,7 @@ class Point
         return $this->divideBy($this->getMagnitude());
     }
     
-    function interpolateToPoint($p, $t)
+    function interpolateTo($p, $t)
     {
         $this->x = interpolate($this->x, $p->x, $t);
         $this->y = interpolate($this->y, $p->y, $t);
@@ -408,7 +408,7 @@ class LineSegmentFlashlight
             
             for($p = 0; $p < $this->numberOfFieldLines; $p++)
             {
-                array_push($this->rootFieldLinePositions, $this->endpoint1->copy()->interpolateToPoint($this->endpoint2, (($this->numberOfFieldLines === 1) ? 0.5 : $p / ($this->numberOfFieldLines - 1))));
+                array_push($this->rootFieldLinePositions, $this->endpoint1->copy()->interpolateTo($this->endpoint2, (($this->numberOfFieldLines === 1) ? 0.5 : $p / ($this->numberOfFieldLines - 1))));
             }
         }
         
@@ -590,13 +590,13 @@ if(!empty(file_get_contents('php://input')))
                                         
                                         else if($dataCharge->type === 'Square')
                                         {
-                                            if(property_exists($dataCharge, 'position') && property_exists($dataCharge, 'width') && property_exists($dataCharge, 'rotation'))
+                                            if(property_exists($dataCharge, 'position') && property_exists($dataCharge, 'rotation') && property_exists($dataCharge, 'width'))
                                             {
                                                 if(property_exists($dataCharge->position, 'x') && property_exists($dataCharge->position, 'y'))
                                                 {
-                                                    if((is_int($dataCharge->position->x) || is_float($dataCharge->position->x)) && (is_int($dataCharge->position->y) || is_float($dataCharge->position->y)) && (is_int($dataCharge->width) || is_float($dataCharge->width)) && (is_int($dataCharge->rotation) || is_float($dataCharge->rotation)))
+                                                    if((is_int($dataCharge->position->x) || is_float($dataCharge->position->x)) && (is_int($dataCharge->position->y) || is_float($dataCharge->position->y)) && (is_int($dataCharge->rotation) || is_float($dataCharge->rotation)) && (is_int($dataCharge->width) || is_float($dataCharge->width)))
                                                     {
-                                                        if(abs($dataCharge->position->x) <= 1E100 && abs($dataCharge->position->y) <= 1E100 && $dataCharge->width > 0 && $dataCharge->width <= 1E100 && abs($dataCharge->rotation) <= 1E100)
+                                                        if(abs($dataCharge->position->x) <= 1E100 && abs($dataCharge->position->y) <= 1E100 && abs($dataCharge->rotation) <= 1E100 && $dataCharge->width > 1E-100 && $dataCharge->width <= 1E100)
                                                         {
                                                             continue;
                                                         }
@@ -607,13 +607,13 @@ if(!empty(file_get_contents('php://input')))
                                         
                                         else if($dataCharge->type === 'Regular Polygon')
                                         {
-                                            if(property_exists($dataCharge, 'position') && property_exists($dataCharge, 'sides') && property_exists($dataCharge, 'radius') && property_exists($dataCharge, 'rotation'))
+                                            if(property_exists($dataCharge, 'position') && property_exists($dataCharge, 'rotation') && property_exists($dataCharge, 'sides') && property_exists($dataCharge, 'radius'))
                                             {
                                                 if(property_exists($dataCharge->position, 'x') && property_exists($dataCharge->position, 'y'))
                                                 {
-                                                    if((is_int($dataCharge->position->x) || is_float($dataCharge->position->x)) && (is_int($dataCharge->position->y) || is_float($dataCharge->position->y)) && is_int($dataCharge->sides) && (is_int($dataCharge->radius) || is_float($dataCharge->radius)) && (is_int($dataCharge->rotation) || is_float($dataCharge->rotation)))
+                                                    if((is_int($dataCharge->position->x) || is_float($dataCharge->position->x)) && (is_int($dataCharge->position->y) || is_float($dataCharge->position->y)) && (is_int($dataCharge->rotation) || is_float($dataCharge->rotation)) && is_int($dataCharge->sides) && (is_int($dataCharge->radius) || is_float($dataCharge->radius)))
                                                     {
-                                                        if(abs($dataCharge->position->x) <= 1E100 && abs($dataCharge->position->y) <= 1E100 && $dataCharge->sides >= 3 && $dataCharge->radius > 0 && $dataCharge->radius <= 1E100 && abs($dataCharge->rotation) <= 1E100)
+                                                        if(abs($dataCharge->position->x) <= 1E100 && abs($dataCharge->position->y) <= 1E100 && abs($dataCharge->rotation) <= 1E100 && $dataCharge->sides >= 3 && $dataCharge->radius > 1E-100 && $dataCharge->radius <= 1E100)
                                                         {
                                                             continue;
                                                         }
@@ -681,7 +681,7 @@ if(!empty(file_get_contents('php://input')))
                                                         {
                                                             if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)))
                                                             {
-                                                                if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && $dataFlashlight->radius > 0 && $dataFlashlight->radius <= 1E100)
+                                                                if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && $dataFlashlight->radius > 1E-100 && $dataFlashlight->radius <= 1E100)
                                                                 {
                                                                     continue;
                                                                 }
@@ -698,7 +698,7 @@ if(!empty(file_get_contents('php://input')))
                                                         {
                                                             if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)))
                                                             {
-                                                                if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && $dataFlashlight->radius > 0 && $dataFlashlight->radius <= 1E100 && $dataFlashlight->startingAngle >= 0 && $dataFlashlight->endingAngle <= 360 && $dataFlashlight->endingAngle - $dataFlashlight->startingAngle >= 1E-100)
+                                                                if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && $dataFlashlight->radius > 1E-100 && $dataFlashlight->radius <= 1E100 && $dataFlashlight->startingAngle >= 0 && $dataFlashlight->endingAngle <= 360 && $dataFlashlight->endingAngle - $dataFlashlight->startingAngle >= 1E-100)
                                                                 {
                                                                     continue;
                                                                 }
@@ -746,16 +746,16 @@ if(!empty(file_get_contents('php://input')))
                                     else if($dataCharge->type === 'Regular Polygon')
                                     {
                                         $center = new Point($dataCharge->position->x, $dataCharge->position->y);
-                                        $vertices = array();
+                                        $points = array();
                                         
-                                        for($v = 0; $v < $dataCharge->sides; $v++)
+                                        for($p = 0; $p < $dataCharge->sides; $p++)
                                         {
-                                            array_push($vertices, $center->copy()->addToPolar($dataCharge->radius, pi() * (2 * $v / $dataCharge->sides + $dataCharge->rotation / 180 + 1 / 2)));
+                                            array_push($points, $center->copy()->addToPolar($dataCharge->radius, pi() * (2 * $p / $dataCharge->sides + $dataCharge->rotation / 180 + 0.5)));
                                         }
                                         
                                         for($s = 0; $s < $dataCharge->sides; $s++)
                                         {
-                                            array_push($charges, new FiniteLineCharge($dataCharge->charge / $dataCharge->sides, $vertices[$s], $vertices[($s + 1) % $dataCharge->sides]));
+                                            array_push($charges, new FiniteLineCharge($dataCharge->charge / $dataCharge->sides, $points[$s], $points[($s + 1) % $dataCharge->sides]));
                                         }
                                     }
                                 }
@@ -785,7 +785,6 @@ if(!empty(file_get_contents('php://input')))
                                 }
                                 
                                 $collection = new Collection($charges, $flashlights);
-                                
                                 $maximumIterationsPerFieldLine = $dataMaximumIterationsPerFieldLine;
                                 $stepPerFieldLineIteration = $dataStepPerFieldLineIteration;
                                 $width = 1000;
@@ -994,6 +993,32 @@ if(!empty(file_get_contents('php://input')))
                                 $elementsDraw->clear();
                                 echo base64_encode($image->getImageBlob());
                                 $image->clear();
+                                
+                                
+                                $logX = floor(log10($maximumX - $minimumX));
+                                $logY = floor(log10($maximumY - $minimumY));
+                                $ticksX = array();
+                                $ticksY = array();
+                                
+                                for($x = 0; $x < 10; $x++)
+                                {
+                                    $interpolationX = interpolate($minimumX, $maximumX, $x / (10 - 1));
+                                    $normalizedX = $interpolationX / pow(10, $logX);
+                                    $truncatedX = round(pow(10, 5) * $normalizedX) / pow(10, 5);
+                                    $scientificX = strval($truncatedX).' x 10 ^ '.strval($logX);
+                                    array_push($ticksX, $scientificX);
+                                }
+                                
+                                for($y = 0; $y < 10; $y++)
+                                {
+                                    $interpolationY = interpolate($minimumY, $maximumY, $y / (10 - 1));
+                                    $normalizedY = $interpolationY / pow(10, $logY);
+                                    $truncatedY = round(pow(10, 5) * $normalizedY) / pow(10, 5);
+                                    $scientificY = strval($truncatedY).' x 10 ^ '.strval($logY);
+                                    array_push($ticksY, $scientificY);
+                                }
+                                
+                                //var_dump($ticksX);
                             }
                         }
                     }
@@ -1006,60 +1031,6 @@ if(!empty(file_get_contents('php://input')))
 function interpolate($startingValue, $endingValue, $interpolation)
 {
     return ($startingValue + ($endingValue - $startingValue) * $interpolation);
-}
-
-function HSLToRGB($h, $s, $l)
-{
-	$c = (1 - abs(2 * $l - 1)) * $s;
-	$x = $c * (1 - abs(fmod(($h / 60), 2) - 1));
-	$m = $l - ($c / 2);
-	
-	if($h < 60)
-	{
-		$r = $c;
-		$g = $x;
-		$b = 0;
-	}
-	
-	else if($h < 120)
-	{
-		$r = $x;
-		$g = $c;
-		$b = 0;
-	}
-	
-	else if($h < 180)
-	{
-		$r = 0;
-		$g = $c;
-		$b = $x;
-	}
-	
-	else if($h < 240)
-	{
-		$r = 0;
-		$g = $x;
-		$b = $c;
-	}
-	
-	else if($h < 300)
-	{
-		$r = $x;
-		$g = 0;
-		$b = $c;
-	}
-	
-	else
-	{
-		$r = $c;
-		$g = 0;
-		$b = $x;
-	}
-	
-	$r = 255 * ($r + $m);
-	$g = 255 * ($g + $m);
-	$b = 255 * ($b + $m);
-    return array($r, $g, $b);
 }
 
 function virtualPositionToScreenCoordinates($position)
