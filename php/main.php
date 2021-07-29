@@ -797,8 +797,11 @@ if(!empty(file_get_contents('php://input')))
                                 $multiplierY = $height / ($maximumY - $minimumY);
                                 
                                 $image = new Imagick();
-                                $image->newImage($width, $height, 'white');
+                                $image->newImage(1.2 * $width, 1.2 * $height, 'white');
                                 $image->setImageFormat('png');
+                                
+                                $electricFieldImage = new Imagick();
+                                $electricFieldImage->newImage($width, $height, 'white');
                                 $backgroundDraw = new ImagickDraw();
                                 $backgroundDraw->setFillColor('#fcfaf5');
                                 
@@ -810,7 +813,7 @@ if(!empty(file_get_contents('php://input')))
                                     }
                                 }
                                 
-                                $image->drawImage($backgroundDraw);
+                                $electricFieldImage->drawImage($backgroundDraw);
                                 $backgroundDraw->clear();
                                 $electricFieldDraw = new ImagickDraw();
                                 $electricFieldDraw->affine(array('sx' => 1, 'sy' => -1, 'rx' => 0, 'ry' => 0, 'tx' => 0, 'ty' => $height));
@@ -861,7 +864,7 @@ if(!empty(file_get_contents('php://input')))
                                     }
                                 }
                                 
-                                $image->drawImage($electricFieldDraw);
+                                $electricFieldImage->drawImage($electricFieldDraw);
                                 $electricFieldDraw->clear();
                                 $elementsDraw = new ImagickDraw();
                                 $elementsDraw->affine(array('sx' => 1, 'sy' => -1, 'rx' => 0, 'ry' => 0, 'tx' => 0, 'ty' => $height));
@@ -989,36 +992,80 @@ if(!empty(file_get_contents('php://input')))
                                     }
                                 }
                                 
-                                $image->drawImage($elementsDraw);
+                                $electricFieldImage->drawImage($elementsDraw);
                                 $elementsDraw->clear();
-                                echo base64_encode($image->getImageBlob());
-                                $image->clear();
+                                $image->compositeImage($electricFieldImage, Imagick::COMPOSITE_DEFAULT, 0.1 * $width, 0.1 * $height);
+                                $electricFieldImage->clear();
                                 
                                 
-                                $logX = floor(log10($maximumX - $minimumX));
-                                $logY = floor(log10($maximumY - $minimumY));
+                                $graphDraw = new ImagickDraw();
+                                $graphDraw->translate(0.1 * $width, 0.1 * $height);
+                                $graphDraw->setStrokeWidth(6);
+                                $graphDraw->setStrokeColor('black');
+                                $graphDraw->setFillOpacity(0);
+                                $graphDraw->pathStart();
+                                $graphDraw->pathMoveToAbsolute(-3, -3);
+                                $graphDraw->pathLineToAbsolute($width + 3, -3);
+                                $graphDraw->pathLineToAbsolute($width + 3, $height + 3);
+                                $graphDraw->pathLineToAbsolute(-3, $height + 3);
+                                $graphDraw->pathClose();
+                                $graphDraw->pathFinish();
+                                
+                                
+                                $graphDraw->setStrokeOpacity(0);
+                                $graphDraw->setFillOpacity(1);
+                                $graphDraw->setFontSize(30);
+                                
                                 $ticksX = array();
-                                $ticksY = array();
                                 
-                                for($x = 0; $x < 10; $x++)
+                                for($x = 0; $x < 5; $x++)
                                 {
-                                    $interpolationX = interpolate($minimumX, $maximumX, $x / (10 - 1));
-                                    $normalizedX = $interpolationX / pow(10, $logX);
-                                    $truncatedX = round(pow(10, 5) * $normalizedX) / pow(10, 5);
-                                    $scientificX = strval($truncatedX).' x 10 ^ '.strval($logX);
-                                    array_push($ticksX, $scientificX);
+                                    $valueX = interpolate($minimumX, $maximumX, $x / (5 - 1));
+                                    
+                                    if($valueX == 0)
+                                    {
+                                        $tickX = '0x10^0';
+                                    }
+                                    
+                                    else
+                                    {
+                                        $logX = floor(log10(abs($valueX)));
+                                        $tickX = strval(round(pow(10, 5 - $logX) * $valueX) / pow(10, 5)).'x10^'.strval($logX);
+                                    }
+                                    
+                                    $graphDraw->annotation($x / (5 - 1) * $width, $height + 60, $tickX);
+                                    array_push($ticksX, $tickX);
                                 }
                                 
-                                for($y = 0; $y < 10; $y++)
+                                $ticksY = array();
+                                
+                                for($y = 0; $y < 5; $y++)
                                 {
-                                    $interpolationY = interpolate($minimumY, $maximumY, $y / (10 - 1));
-                                    $normalizedY = $interpolationY / pow(10, $logY);
-                                    $truncatedY = round(pow(10, 5) * $normalizedY) / pow(10, 5);
-                                    $scientificY = strval($truncatedY).' x 10 ^ '.strval($logY);
-                                    array_push($ticksY, $scientificY);
+                                    $valueY = interpolate($minimumY, $maximumY, $y / (5 - 1));
+                                    
+                                    if($valueY == 0)
+                                    {
+                                        $tickY = '0 x 10 ^ 0';
+                                    }
+                                    
+                                    else
+                                    {
+                                        $logY = floor(log10(abs($valueY)));
+                                        $tickY = strval(round(pow(10, 5 - $logY) * $valueY) / pow(10, 5)).' x 10 ^ '.strval($logY);
+                                    }
+                                    
+                                    array_push($ticksY, $tickY);
                                 }
                                 
                                 //var_dump($ticksX);
+                                
+                                
+                                
+                                
+                                $image->drawImage($graphDraw);
+                                $graphDraw->clear();
+                                echo base64_encode($image->getImageBlob());
+                                $image->clear();
                             }
                         }
                     }
