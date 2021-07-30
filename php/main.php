@@ -588,23 +588,6 @@ if(!empty(file_get_contents('php://input')))
                                             }
                                         }
                                         
-                                        else if($dataCharge->type === 'Square')
-                                        {
-                                            if(property_exists($dataCharge, 'position') && property_exists($dataCharge, 'rotation') && property_exists($dataCharge, 'width'))
-                                            {
-                                                if(property_exists($dataCharge->position, 'x') && property_exists($dataCharge->position, 'y'))
-                                                {
-                                                    if((is_int($dataCharge->position->x) || is_float($dataCharge->position->x)) && (is_int($dataCharge->position->y) || is_float($dataCharge->position->y)) && (is_int($dataCharge->rotation) || is_float($dataCharge->rotation)) && (is_int($dataCharge->width) || is_float($dataCharge->width)))
-                                                    {
-                                                        if(abs($dataCharge->position->x) <= 1E100 && abs($dataCharge->position->y) <= 1E100 && abs($dataCharge->rotation) <= 1E100 && $dataCharge->width > 1E-100 && $dataCharge->width <= 1E100)
-                                                        {
-                                                            continue;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        
                                         else if($dataCharge->type === 'Regular Polygon')
                                         {
                                             if(property_exists($dataCharge, 'position') && property_exists($dataCharge, 'rotation') && property_exists($dataCharge, 'sides') && property_exists($dataCharge, 'radius'))
@@ -733,16 +716,6 @@ if(!empty(file_get_contents('php://input')))
                                         array_push($charges, new FiniteLineCharge($dataCharge->charge, new Point($dataCharge->endpoint1->x, $dataCharge->endpoint1->y), new Point($dataCharge->endpoint2->x, $dataCharge->endpoint2->y)));
                                     }
                                     
-                                    else if($dataCharge->type === 'Square')
-                                    {
-                                        $center = new Point($dataCharge->position->x, $dataCharge->position->y);
-                                        $topLeft = $center->copy()->addToCoordinates(-$dataCharge->width / 2, $dataCharge->width / 2)->rotateAround($center, pi() / 180 * $dataCharge->rotation);
-                                        $topRight = $center->copy()->addToCoordinates($dataCharge->width / 2, $dataCharge->width / 2)->rotateAround($center, pi() / 180 * $dataCharge->rotation);
-                                        $bottomRight = $center->copy()->addToCoordinates($dataCharge->width / 2, -$dataCharge->width / 2)->rotateAround($center, pi() / 180 * $dataCharge->rotation);
-                                        $bottomLeft = $center->copy()->addToCoordinates(-$dataCharge->width / 2, -$dataCharge->width / 2)->rotateAround($center, pi() / 180 * $dataCharge->rotation);
-                                        array_push($charges, new FiniteLineCharge($dataCharge->charge / 4, $topLeft, $topRight), new FiniteLineCharge($dataCharge->charge / 4, $topRight, $bottomRight), new FiniteLineCharge($dataCharge->charge / 4, $bottomRight, $bottomLeft), new FiniteLineCharge($dataCharge->charge / 4, $bottomLeft, $topLeft));
-                                    }
-                                    
                                     else if($dataCharge->type === 'Regular Polygon')
                                     {
                                         $center = new Point($dataCharge->position->x, $dataCharge->position->y);
@@ -797,11 +770,8 @@ if(!empty(file_get_contents('php://input')))
                                 $multiplierY = $height / ($maximumY - $minimumY);
                                 
                                 $image = new Imagick();
-                                $image->newImage(1.2 * $width, 1.2 * $height, 'white');
+                                $image->newImage($width, $height, 'white');
                                 $image->setImageFormat('png');
-                                
-                                $electricFieldImage = new Imagick();
-                                $electricFieldImage->newImage($width, $height, 'white');
                                 $backgroundDraw = new ImagickDraw();
                                 $backgroundDraw->setFillColor('#fcfaf5');
                                 
@@ -813,7 +783,7 @@ if(!empty(file_get_contents('php://input')))
                                     }
                                 }
                                 
-                                $electricFieldImage->drawImage($backgroundDraw);
+                                $image->drawImage($backgroundDraw);
                                 $backgroundDraw->clear();
                                 $electricFieldDraw = new ImagickDraw();
                                 $electricFieldDraw->affine(array('sx' => 1, 'sy' => -1, 'rx' => 0, 'ry' => 0, 'tx' => 0, 'ty' => $height));
@@ -864,7 +834,7 @@ if(!empty(file_get_contents('php://input')))
                                     }
                                 }
                                 
-                                $electricFieldImage->drawImage($electricFieldDraw);
+                                $image->drawImage($electricFieldDraw);
                                 $electricFieldDraw->clear();
                                 $elementsDraw = new ImagickDraw();
                                 $elementsDraw->affine(array('sx' => 1, 'sy' => -1, 'rx' => 0, 'ry' => 0, 'tx' => 0, 'ty' => $height));
@@ -992,78 +962,8 @@ if(!empty(file_get_contents('php://input')))
                                     }
                                 }
                                 
-                                $electricFieldImage->drawImage($elementsDraw);
+                                $image->drawImage($elementsDraw);
                                 $elementsDraw->clear();
-                                $image->compositeImage($electricFieldImage, Imagick::COMPOSITE_DEFAULT, 0.1 * $width, 0.1 * $height);
-                                $electricFieldImage->clear();
-                                
-                                
-                                $graphDraw = new ImagickDraw();
-                                $graphDraw->translate(0.1 * $width, 0.1 * $height);
-                                $graphDraw->setStrokeWidth(6);
-                                $graphDraw->setStrokeColor('black');
-                                $graphDraw->setFillOpacity(0);
-                                $graphDraw->pathStart();
-                                $graphDraw->pathMoveToAbsolute(-3, -3);
-                                $graphDraw->pathLineToAbsolute($width + 3, -3);
-                                $graphDraw->pathLineToAbsolute($width + 3, $height + 3);
-                                $graphDraw->pathLineToAbsolute(-3, $height + 3);
-                                $graphDraw->pathClose();
-                                $graphDraw->pathFinish();
-                                
-                                
-                                $graphDraw->setStrokeOpacity(0);
-                                $graphDraw->setFillOpacity(1);
-                                $graphDraw->setFontSize(30);
-                                
-                                $ticksX = array();
-                                
-                                for($x = 0; $x < 5; $x++)
-                                {
-                                    $valueX = interpolate($minimumX, $maximumX, $x / (5 - 1));
-                                    
-                                    if($valueX == 0)
-                                    {
-                                        $tickX = '0x10^0';
-                                    }
-                                    
-                                    else
-                                    {
-                                        $logX = floor(log10(abs($valueX)));
-                                        $tickX = strval(round(pow(10, 5 - $logX) * $valueX) / pow(10, 5)).'x10^'.strval($logX);
-                                    }
-                                    
-                                    $graphDraw->annotation($x / (5 - 1) * $width, $height + 60, $tickX);
-                                    array_push($ticksX, $tickX);
-                                }
-                                
-                                $ticksY = array();
-                                
-                                for($y = 0; $y < 5; $y++)
-                                {
-                                    $valueY = interpolate($minimumY, $maximumY, $y / (5 - 1));
-                                    
-                                    if($valueY == 0)
-                                    {
-                                        $tickY = '0 x 10 ^ 0';
-                                    }
-                                    
-                                    else
-                                    {
-                                        $logY = floor(log10(abs($valueY)));
-                                        $tickY = strval(round(pow(10, 5 - $logY) * $valueY) / pow(10, 5)).' x 10 ^ '.strval($logY);
-                                    }
-                                    
-                                    array_push($ticksY, $tickY);
-                                }
-                                
-                                //var_dump($ticksX);
-                                
-                                
-                                
-                                
-                                $image->drawImage($graphDraw);
-                                $graphDraw->clear();
                                 echo base64_encode($image->getImageBlob());
                                 $image->clear();
                             }

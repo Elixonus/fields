@@ -9,8 +9,7 @@
     
     <body>
         <h1>Electric Field Simulation</h1>
-        <label>Choose a charge configuration:</label>
-        <select id="select"></select>
+        Choose a charge configuration: <select id="select"></select>
         <br>
         <br>
         <textarea id="input" rows="10" cols="80" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
@@ -31,7 +30,12 @@
                             <mark class="lowlight">Position</mark>: X and Y coordinates of the point charge in meters<br><br>
                             If charge type is set to "Finite Line", these parameters will be used<br>
                             <mark class="lowlight">Endpoint1</mark>: X and Y coordinates of the first endpoint in meters<br>
-                            <mark class="lowlight">Endpoint2</mark>: X and Y coordinates of the second endpoint in meters
+                            <mark class="lowlight">Endpoint2</mark>: X and Y coordinates of the second endpoint in meters<br><br>
+                            If charge type is set to "Regular Polygon", these parameters will be used<br>
+                            <mark class="lowlight">Position</mark>: X and Y coordinates of the charge in meters<br>
+                            <mark class="lowlight">Rotation</mark>: Angle of rotation of the shape in degrees<br>
+                            <mark class="lowlight">Sides</mark>: Number of sides on the polygon<br>
+                            <mark class="lowlight">Radius</mark>: The distance from the center to each corner of the polygon in meters<br>
                         </p>
                     <h3 class="tab2">Flashlights: A list containing data for each flashlight that defines the starting position of the field lines</h3>
                         <p class="tab3">
@@ -203,6 +207,7 @@
                         {
                             waiting = false;
                             document.getElementById("spinner").style.animationPlayState = "paused";
+                            console.log(this.responseText);
                             
                             if(this.responseText.length > 0)
                             {
