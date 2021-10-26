@@ -17,6 +17,9 @@
         <br>
         <button id="button" type="button"><i id="spinner" class="fas fa-sync-alt" style="animation-play-state: paused;"></i> Submit</button>
         <br>
+        
+        <p id="credits">Credits</p>
+        
         <br>
         <img id="image" style="display: none;">
         <div class="information">
@@ -129,6 +132,11 @@
               to {transform: rotate(360deg);}
             }
             
+            #credits
+            {
+                color: #ffd700;
+            }
+            
             #image
             {
                 width: 1000px;
@@ -188,6 +196,7 @@
             var select = document.getElementById("select");
             var input = document.getElementById("input");
             var button = document.getElementById("button");
+            var credits = document.getElementById("credits");
             var image = document.getElementById("image");
             var waiting = false;
             
@@ -201,13 +210,13 @@
                     waiting = true;
                     document.getElementById("spinner").style.animationPlayState = "running";
                     var xhttp = new XMLHttpRequest();
+                    
                     xhttp.onreadystatechange = function()
                     {
                         if(this.readyState == 4 && this.status == 200)
                         {
                             waiting = false;
                             document.getElementById("spinner").style.animationPlayState = "paused";
-                            console.log(this.responseText);
                             
                             if(this.responseText.length > 0)
                             {
@@ -220,9 +229,12 @@
                                 image.removeAttribute("src");
                                 image.style.display = "none";
                             }
+                            
+                            getCredits();
                         }
                     };
-                    xhttp.open("POST", "./php/main.php", true);
+                    
+                    xhttp.open("POST", "./php/main.php");
                     xhttp.send(input.value);
                 }
             }
@@ -230,6 +242,7 @@
             function getExamples()
             {
                 var xhttp = new XMLHttpRequest();
+                
                 xhttp.onreadystatechange = function()
                 {
                     if(this.readyState == 4 && this.status == 200)
@@ -249,6 +262,7 @@
                         }
                         
                         select.value = "";
+                        
                         select.onchange = function()
                         {
                             input.value = JSON.stringify(examples[select.value], null, 2);
@@ -260,7 +274,32 @@
                         }
                     }
                 };
-                xhttp.open("GET", "./php/examples.php", true);
+                
+                xhttp.open("GET", "./php/examples.php");
+                xhttp.send();
+            }
+            
+            function getCredits()
+            {
+                var xhttp = new XMLHttpRequest();
+                
+                xhttp.onreadystatechange = function()
+                {
+                    if(this.readyState == 4 && this.status == 200)
+                    {
+                        if(this.responseText == 0)
+                        {
+                            credits.innerHTML = "Credits: 0";
+                        }
+                        
+                        else
+                        {
+                            credits.innerHTML = "Credits: " + JSON.parse(this.responseText).quantity;
+                        }
+                    }
+                };
+                
+                xhttp.open("GET", "./php/credits.php");
                 xhttp.send();
             }
         
