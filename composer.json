@@ -1,0 +1,14 @@
+{
+  "name": "vendor_name/chargesPHP",
+  "description": "description",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "daxon",
+      "email": "email@example.com"
+    }
+  ],
+  "require": {
+  }
+}

@@ -17,10 +17,6 @@
         <br>
         <button id="button" type="button"><i id="spinner" class="fas fa-sync-alt" style="animation-play-state: paused;"></i> Submit</button>
         <br>
-        
-        <p id="credits">Credits</p>
-        
-        <br>
         <img id="image" style="display: none;">
         <div class="information">
             <h1><mark class="highlight">Definitions</mark></h1>
@@ -131,12 +127,7 @@
               from {transform: rotate(0deg);}
               to {transform: rotate(360deg);}
             }
-            
-            #credits
-            {
-                color: #ffd700;
-            }
-            
+
             #image
             {
                 width: 1000px;
@@ -196,7 +187,6 @@
             var select = document.getElementById("select");
             var input = document.getElementById("input");
             var button = document.getElementById("button");
-            var credits = document.getElementById("credits");
             var image = document.getElementById("image");
             var waiting = false;
             
@@ -229,30 +219,23 @@
                                 image.removeAttribute("src");
                                 image.style.display = "none";
                             }
-                            
-                            getCredits();
                         }
                     };
                     
-                    xhttp.open("POST", "./php/main.php");
+                    xhttp.open("POST", "./php/simulation.php");
                     xhttp.send(input.value);
                 }
             }
             
-            function getExamples()
-            {
+            function getExamples() {
                 var xhttp = new XMLHttpRequest();
-                
-                xhttp.onreadystatechange = function()
-                {
-                    if(this.readyState == 4 && this.status == 200)
-                    {
+
+                xhttp.onreadystatechange = function () {
+                    if (this.readyState == 4 && this.status == 200) {
                         var examples = JSON.parse(this.responseText);
-                        
-                        for(var nameOfExample in examples)
-                        {
-                            if(Object.prototype.hasOwnProperty.call(examples, nameOfExample))
-                            {
+
+                        for (var nameOfExample in examples) {
+                            if (Object.prototype.hasOwnProperty.call(examples, nameOfExample)) {
                                 var example = examples[nameOfExample];
                                 var option = document.createElement("option");
                                 option.value = nameOfExample;
@@ -260,46 +243,20 @@
                                 select.appendChild(option);
                             }
                         }
-                        
+
                         select.value = "";
-                        
-                        select.onchange = function()
-                        {
+
+                        select.onchange = function () {
                             input.value = JSON.stringify(examples[select.value], null, 2);
                         }
-                        
-                        input.onchange = function()
-                        {
+
+                        input.onchange = function () {
                             select.value = "";
                         }
                     }
                 };
-                
+
                 xhttp.open("GET", "./php/examples.php");
-                xhttp.send();
-            }
-            
-            function getCredits()
-            {
-                var xhttp = new XMLHttpRequest();
-                
-                xhttp.onreadystatechange = function()
-                {
-                    if(this.readyState == 4 && this.status == 200)
-                    {
-                        if(this.responseText == 0)
-                        {
-                            credits.innerHTML = "Credits: 0";
-                        }
-                        
-                        else
-                        {
-                            credits.innerHTML = "Credits: " + JSON.parse(this.responseText).quantity;
-                        }
-                    }
-                };
-                
-                xhttp.open("GET", "./php/credits.php");
                 xhttp.send();
             }
         
