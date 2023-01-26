@@ -4,29 +4,11 @@
         "charges": [
         {
             "type": "Point",
-            "charge": -1.6021E-19,
+            "charge": 1.6021E-19,
             "position":
             {
-                "x": 0.3,
-                "y": 0.6
-            }
-        },
-        {
-            "type": "Point",
-            "charge": -1.6021E-19,
-            "position":
-            {
-                "x": 0.7,
-                "y": 0.6
-            }
-        },
-        {
-            "type": "Point",
-            "charge": -1.6021E-19,
-            "position":
-            {
-                "x": 0.4,
-                "y": 0.3
+                "x": 0.5,
+                "y": 0.5
             }
         }],
         "flashlights": [

@@ -3,30 +3,29 @@
     {
         "charges": [
         {
-            "type": "Finite Line",
+            "type": "Point",
             "charge": 1.6021E-19,
-            "endpoint1":
+            "position":
             {
                 "x": 0.3,
                 "y": 0.3
-            },
-            "endpoint2":
-            {
-                "x": 0.4,
-                "y": 0.7
             }
         },
         {
-            "type": "Finite Line",
-            "charge": -1.6021E-19,
-            "endpoint1":
+            "type": "Point",
+            "charge": 1.6021E-19,
+            "position":
             {
                 "x": 0.7,
                 "y": 0.3
-            },
-            "endpoint2":
+            }
+        },
+        {
+            "type": "Point",
+            "charge": -1.6021E-19,
+            "position":
             {
-                "x": 0.7,
+                "x": 0.6,
                 "y": 0.7
             }
         }],
@@ -39,27 +38,27 @@
                 "y": 0.5
             },
             "radius": 0.45,
-            "numberOfFieldLines": 20
+            "numberOfFieldLines": 30
         },
         {
             "type": "Line Segment",
             "endpoint1":
             {
-                "x": 0.5,
-                "y": 0.1
+                "x": 0.1,
+                "y": 0.6
             },
             "endpoint2":
             {
-                "x": 0.5,
-                "y": 0.9
+                "x": 0.9,
+                "y": 0.5
             },
-            "numberOfFieldLines": 20
+            "numberOfFieldLines": 10
         }]
     },
     "output":
     {
-        "maximumIterationsPerFieldLine": 1000,
-        "stepPerFieldLineIteration": 0.0015,
+        "maximumIterationsPerFieldLine": 1500,
+        "stepPerFieldLineIteration": 0.002,
         "minimumX": 0,
         "minimumY": 0,
         "maximumX": 1,

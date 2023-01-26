@@ -3,21 +3,17 @@
     {
         "charges": [
         {
-            "type": "Point",
-            "charge": 1.6021E-19,
-            "position":
+            "type": "Finite Line",
+            "charge": -1.6021E-19,
+            "endpoint1":
             {
                 "x": 0.3,
-                "y": 0.5
-            }
-        },
-        {
-            "type": "Point",
-            "charge": 1.6021E-19,
-            "position":
+                "y": 0.3
+            },
+            "endpoint2":
             {
                 "x": 0.7,
-                "y": 0.5
+                "y": 0.7
             }
         }],
         "flashlights": [

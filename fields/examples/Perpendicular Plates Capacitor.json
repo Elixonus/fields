@@ -21,13 +21,13 @@
             "charge": -1.6021E-19,
             "endpoint1":
             {
-                "x": 0.7,
-                "y": 0.3
+                "x": 0.6,
+                "y": 0.5
             },
             "endpoint2":
             {
-                "x": 0.7,
-                "y": 0.7
+                "x": 0.8,
+                "y": 0.5
             }
         }],
         "flashlights": [
@@ -59,7 +59,7 @@
     "output":
     {
         "maximumIterationsPerFieldLine": 1000,
-        "stepPerFieldLineIteration": 0.001,
+        "stepPerFieldLineIteration": 0.0015,
         "minimumX": 0,
         "minimumY": 0,
         "maximumX": 1,

@@ -4,10 +4,19 @@
         "charges": [
         {
             "type": "Point",
-            "charge": 0,
+            "charge": -1.6021E-19,
             "position":
             {
-                "x": 0.5,
+                "x": 0.3,
+                "y": 0.5
+            }
+        },
+        {
+            "type": "Point",
+            "charge": -1.6021E-19,
+            "position":
+            {
+                "x": 0.7,
                 "y": 0.5
             }
         }],

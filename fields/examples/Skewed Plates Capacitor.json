@@ -12,6 +12,20 @@
             },
             "endpoint2":
             {
+                "x": 0.4,
+                "y": 0.7
+            }
+        },
+        {
+            "type": "Finite Line",
+            "charge": -1.6021E-19,
+            "endpoint1":
+            {
+                "x": 0.7,
+                "y": 0.3
+            },
+            "endpoint2":
+            {
                 "x": 0.7,
                 "y": 0.7
             }
@@ -25,13 +39,27 @@
                 "y": 0.5
             },
             "radius": 0.45,
-            "numberOfFieldLines": 40
+            "numberOfFieldLines": 20
+        },
+        {
+            "type": "Line Segment",
+            "endpoint1":
+            {
+                "x": 0.5,
+                "y": 0.1
+            },
+            "endpoint2":
+            {
+                "x": 0.5,
+                "y": 0.9
+            },
+            "numberOfFieldLines": 20
         }]
     },
     "output":
     {
         "maximumIterationsPerFieldLine": 1000,
-        "stepPerFieldLineIteration": 0.001,
+        "stepPerFieldLineIteration": 0.0015,
         "minimumX": 0,
         "minimumY": 0,
         "maximumX": 1,

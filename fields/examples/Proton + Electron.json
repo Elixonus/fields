@@ -3,30 +3,20 @@
     {
         "charges": [
         {
-            "type": "Finite Line",
+            "type": "Point",
             "charge": 1.6021E-19,
-            "endpoint1":
+            "position":
             {
                 "x": 0.3,
-                "y": 0.3
-            },
-            "endpoint2":
-            {
-                "x": 0.3,
-                "y": 0.7
+                "y": 0.5
             }
         },
         {
-            "type": "Finite Line",
+            "type": "Point",
             "charge": -1.6021E-19,
-            "endpoint1":
+            "position":
             {
-                "x": 0.6,
-                "y": 0.5
-            },
-            "endpoint2":
-            {
-                "x": 0.8,
+                "x": 0.7,
                 "y": 0.5
             }
         }],
@@ -59,7 +49,7 @@
     "output":
     {
         "maximumIterationsPerFieldLine": 1000,
-        "stepPerFieldLineIteration": 0.0015,
+        "stepPerFieldLineIteration": 0.001,
         "minimumX": 0,
         "minimumY": 0,
         "maximumX": 1,
