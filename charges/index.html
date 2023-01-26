@@ -2,9 +2,7 @@
 <html>
     <head>
         <title>Electric Field</title>
-        <link rel="icon" href="/favicon.ico" type="image/x-icon">
-        <link rel="stylesheet" href="./libraries/all.css">
-        <script src="./libraries/all.js"></script>
+        <link rel="icon" type="image/x-icon" href="./favicon.ico">
     </head>
     
     <body>
@@ -15,7 +13,7 @@
         <textarea id="input" rows="10" cols="80" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
         <br>
         <br>
-        <button id="button" type="button"><i id="spinner" class="fas fa-sync-alt" style="animation-play-state: paused;"></i> Submit</button>
+        <button id="button" type="button" onclick="getImage();">Submit</button>
         <br>
         <br>
         <img id="image" style="display: none;">
@@ -117,17 +115,6 @@
                 box-shadow: 0 5px 15px #7d3b13;
                 transform: scale(1.05);
             }
-            
-            #spinner
-            {
-                animation: spin 2s linear infinite;
-            }
-            
-            @keyframes spin
-            {
-              from {transform: rotate(0deg);}
-              to {transform: rotate(360deg);}
-            }
 
             #image
             {
@@ -185,29 +172,27 @@
         
         <script>
             
-            var select = document.getElementById("select");
-            var input = document.getElementById("input");
-            var button = document.getElementById("button");
-            var image = document.getElementById("image");
-            var waiting = false;
-            
-            button.onclick = getImage;
+            const select = document.getElementById("select");
+            const input = document.getElementById("input");
+            const button = document.getElementById("button");
+            const image = document.getElementById("image");
+            let waiting = false;
             getExamples();
             
             function getImage()
             {
-                if(waiting === false)
+                if(!waiting)
                 {
                     waiting = true;
-                    document.getElementById("spinner").style.animationPlayState = "running";
-                    var xhttp = new XMLHttpRequest();
+                    document.getElementById("button").innerHTML = "Button...";
+                    const xhttp = new XMLHttpRequest();
                     
                     xhttp.onreadystatechange = function()
                     {
                         if(this.readyState == 4 && this.status == 200)
                         {
                             waiting = false;
-                            document.getElementById("spinner").style.animationPlayState = "paused";
+                            document.getElementById("button").innerHTML = "Button...";
                             
                             if(this.responseText.length > 0)
                             {
@@ -228,32 +213,38 @@
                 }
             }
             
-            function getExamples() {
-                var xhttp = new XMLHttpRequest();
+            function getExamples()
+            {
+                const xhttp = new XMLHttpRequest();
 
-                xhttp.onreadystatechange = function () {
-                    if (this.readyState == 4 && this.status == 200) {
-                        var examples = JSON.parse(this.responseText);
+                xhttp.onreadystatechange = function ()
+                {
+                    if(this.readyState == 4 && this.status == 200)
+                    {
+                        const examples = JSON.parse(this.responseText);
 
-                        for (var nameOfExample in examples) {
-                            if (Object.prototype.hasOwnProperty.call(examples, nameOfExample)) {
-                                var example = examples[nameOfExample];
-                                var option = document.createElement("option");
-                                option.value = nameOfExample;
-                                option.innerHTML = nameOfExample;
+                        for(let exampleName in examples)
+                        {
+                            if(Object.prototype.hasOwnProperty.call(examples, exampleName))
+                            {
+                                const option = document.createElement("option");
+                                option.value = exampleName;
+                                option.innerHTML = exampleName;
                                 select.appendChild(option);
                             }
                         }
 
                         select.value = "";
 
-                        select.onchange = function () {
+                        select.onchange = function ()
+                        {
                             input.value = JSON.stringify(examples[select.value], null, 2);
-                        }
+                        };
 
-                        input.onchange = function () {
+                        input.onchange = function ()
+                        {
                             select.value = "";
-                        }
+                        };
                     }
                 };
 
