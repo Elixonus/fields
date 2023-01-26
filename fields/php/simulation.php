@@ -370,13 +370,13 @@ class LineSegmentFlashlight
 {
     public $endpoint1;
     public $endpoint2;
-    public $numberFieldLines;
+    public $fieldLineCount;
     
-    function __construct($endpoint1, $endpoint2, $numberFieldLines)
+    function __construct($endpoint1, $endpoint2, $fieldLineCount)
     {
         $this->endpoint1 = $endpoint1;
         $this->endpoint2 = $endpoint2;
-        $this->numberFieldLines = $numberFieldLines;
+        $this->fieldLineCount = $fieldLineCount;
         return $this;
     }
     
@@ -404,9 +404,9 @@ class LineSegmentFlashlight
         {
             $this->rootFieldLinePositions = array();
             
-            for($p = 0; $p < $this->numberFieldLines; $p++)
+            for($p = 0; $p < $this->fieldLineCount; $p++)
             {
-                array_push($this->rootFieldLinePositions, $this->endpoint1->copy()->interpolateTo($this->endpoint2, (($this->numberFieldLines === 1) ? 0.5 : $p / ($this->numberFieldLines - 1))));
+                array_push($this->rootFieldLinePositions, $this->endpoint1->copy()->interpolateTo($this->endpoint2, (($this->fieldLineCount === 1) ? 0.5 : $p / ($this->fieldLineCount - 1))));
             }
         }
         
@@ -418,13 +418,13 @@ class CircleFlashlight
 {
     public $position;
     public $radius;
-    public $numberFieldLines;
+    public $fieldLineCount;
     
-    function __construct($position, $radius, $numberFieldLines)
+    function __construct($position, $radius, $fieldLineCount)
     {
         $this->position = $position;
         $this->radius = $radius;
-        $this->numberFieldLines = $numberFieldLines;
+        $this->fieldLineCount = $fieldLineCount;
         return $this;
     }
     
@@ -452,9 +452,9 @@ class CircleFlashlight
         {
             $this->rootFieldLinePositions = array();
             
-            for($p = 0; $p < $this->numberFieldLines; $p++)
+            for($p = 0; $p < $this->fieldLineCount; $p++)
             {
-                array_push($this->rootFieldLinePositions, $this->position->copy()->addToPolar($this->radius, interpolate(0, 2 * pi(), $p / $this->numberFieldLines)));
+                array_push($this->rootFieldLinePositions, $this->position->copy()->addToPolar($this->radius, interpolate(0, 2 * pi(), $p / $this->fieldLineCount)));
             }
         }
         
@@ -468,15 +468,15 @@ class CircularArcFlashlight
     public $radius;
     public $startingAngle;
     public $endingAngle;
-    public $numberFieldLines;
+    public $fieldLineCount;
     
-    function __construct($position, $radius, $startingAngle, $endingAngle, $numberFieldLines)
+    function __construct($position, $radius, $startingAngle, $endingAngle, $fieldLineCount)
     {
         $this->position = $position;
         $this->radius = $radius;
         $this->startingAngle = $startingAngle;
         $this->endingAngle = $endingAngle;
-        $this->numberFieldLines = $numberFieldLines;
+        $this->fieldLineCount = $fieldLineCount;
         return $this;
     }
     
@@ -504,9 +504,9 @@ class CircularArcFlashlight
         {
             $this->rootFieldLinePositions = array();
             
-            for($p = 0; $p < $this->numberFieldLines; $p++)
+            for($p = 0; $p < $this->fieldLineCount; $p++)
             {
-                array_push($this->rootFieldLinePositions, $this->position->copy()->addToPolar($this->radius, interpolate($this->startingAngle, $this->endingAngle, ($this->numberFieldLines === 1) ? 0.5 : $p / ($this->numberFieldLines - 1))));
+                array_push($this->rootFieldLinePositions, $this->position->copy()->addToPolar($this->radius, interpolate($this->startingAngle, $this->endingAngle, ($this->fieldLineCount === 1) ? 0.5 : $p / ($this->fieldLineCount - 1))));
             }
         }
         
@@ -523,20 +523,20 @@ if(json_last_error() === JSON_ERROR_NONE)
         $dataInput = $data->input;
         $dataOutput = $data->output;
 
-        if(property_exists($dataInput, 'charges') && property_exists($dataInput, 'flashlights') && property_exists($dataOutput, 'fieldLineMaximumIterations') && property_exists($dataOutput, 'fieldLineIterationStep') && property_exists($dataOutput, 'minimumX') && property_exists($dataOutput, 'minimumY') && property_exists($dataOutput, 'maximumX') && property_exists($dataOutput, 'maximumY'));
+        if(property_exists($dataInput, 'charges') && property_exists($dataInput, 'flashlights') && property_exists($dataOutput, 'fieldLineIterationLimit') && property_exists($dataOutput, 'fieldLineIterationStep') && property_exists($dataOutput, 'viewportMinimumX') && property_exists($dataOutput, 'viewportMinimumY') && property_exists($dataOutput, 'viewportMaximumX') && property_exists($dataOutput, 'viewportMaximumY'));
         {
             $dataCharges = $dataInput->charges;
             $dataFlashlights = $dataInput->flashlights;
-            $dataFieldLineMaximumIterations = $dataOutput->fieldLineMaximumIterations;
+            $dataFieldLineIterationLimit = $dataOutput->fieldLineIterationLimit;
             $dataFieldLineIterationStep = $dataOutput->fieldLineIterationStep;
-            $dataMinimumX = $dataOutput->minimumX;
-            $dataMinimumY = $dataOutput->minimumY;
-            $dataMaximumX = $dataOutput->maximumX;
-            $dataMaximumY = $dataOutput->maximumY;
+            $dataViewportMinimumX = $dataOutput->viewportMinimumX;
+            $dataViewportMinimumY = $dataOutput->viewportMinimumY;
+            $dataViewportMaximumX = $dataOutput->viewportMaximumX;
+            $dataViewportMaximumY = $dataOutput->viewportMaximumY;
 
-            if(is_array($dataCharges) && is_array($dataFlashlights) && is_int($dataFieldLineMaximumIterations) && (is_int($dataFieldLineIterationStep) || is_float($dataFieldLineIterationStep)) && (is_int($dataMinimumX) || is_float($dataMinimumX)) && (is_int($dataMinimumY) || is_float($dataMinimumY)) && (is_int($dataMaximumX) || is_float($dataMaximumX)) && (is_int($dataMaximumY) || is_float($dataMaximumY)))
+            if(is_array($dataCharges) && is_array($dataFlashlights) && is_int($dataFieldLineIterationLimit) && (is_int($dataFieldLineIterationStep) || is_float($dataFieldLineIterationStep)) && (is_int($dataViewportMinimumX) || is_float($dataViewportMinimumX)) && (is_int($dataViewportMinimumY) || is_float($dataViewportMinimumY)) && (is_int($dataViewportMaximumX) || is_float($dataViewportMaximumX)) && (is_int($dataViewportMaximumY) || is_float($dataViewportMaximumY)))
             {
-                if(count($dataCharges) <= 100 && count($dataFlashlights) <= 100 && $dataFieldLineMaximumIterations >= 0 && $dataFieldLineIterationStep >= 1E-100 && $dataFieldLineIterationStep <= 1E100 && $dataMinimumX >= -1E100 && $dataMinimumY >= -1E100 && $dataMaximumX <= 1E100 && $dataMaximumY <= 1E100 && $dataMaximumX - $dataMinimumX >= 1E-100 && $dataMaximumY - $dataMinimumY >= 1E-100)
+                if(count($dataCharges) <= 100 && count($dataFlashlights) <= 100 && $dataFieldLineIterationLimit >= 0 && $dataFieldLineIterationStep >= 1E-100 && $dataFieldLineIterationStep <= 1E100 && $dataViewportMinimumX >= -1E100 && $dataViewportMinimumY >= -1E100 && $dataViewportMaximumX <= 1E100 && $dataViewportMaximumY <= 1E100 && $dataViewportMaximumX - $dataViewportMinimumX >= 1E-100 && $dataViewportMaximumY - $dataViewportMinimumY >= 1E-100)
                 {
                     $chargesValid = true;
 
@@ -609,19 +609,19 @@ if(json_last_error() === JSON_ERROR_NONE)
                     if($chargesValid)
                     {
                         $flashlightsValid = true;
-                        $totalnumberFieldLines = 0;
+                        $totalfieldLineCount = 0;
 
                         foreach($dataFlashlights as $dataFlashlight)
                         {
-                            if(property_exists($dataFlashlight, 'type') && property_exists($dataFlashlight, 'numberFieldLines'))
+                            if(property_exists($dataFlashlight, 'type') && property_exists($dataFlashlight, 'fieldLineCount'))
                             {
-                                if(is_int($dataFlashlight->numberFieldLines))
+                                if(is_int($dataFlashlight->fieldLineCount))
                                 {
-                                    if($dataFlashlight->numberFieldLines >= 0 && $dataFlashlight->numberFieldLines <= 1000)
+                                    if($dataFlashlight->fieldLineCount >= 0 && $dataFlashlight->fieldLineCount <= 1000)
                                     {
-                                        $totalnumberFieldLines += $dataFlashlight->numberFieldLines;
+                                        $totalfieldLineCount += $dataFlashlight->fieldLineCount;
 
-                                        if($totalnumberFieldLines <= 1000)
+                                        if($totalfieldLineCount <= 1000)
                                         {
                                             if($dataFlashlight->type === 'Line Segment')
                                             {
@@ -682,7 +682,7 @@ if(json_last_error() === JSON_ERROR_NONE)
                             break;
                         }
 
-                        if($flashlightsValid && $totalnumberFieldLines * $dataFieldLineMaximumIterations * count($dataCharges) <= 1000000)
+                        if($flashlightsValid && $totalfieldLineCount * $dataFieldLineIterationLimit * count($dataCharges) <= 1000000)
                         {
                             $charges = array();
 
@@ -721,33 +721,33 @@ if(json_last_error() === JSON_ERROR_NONE)
                             {
                                 if($dataFlashlight->type === 'Line Segment')
                                 {
-                                    $flashlight = new LineSegmentFlashlight(new Point($dataFlashlight->endpoint1->x, $dataFlashlight->endpoint1->y), new Point($dataFlashlight->endpoint2->x, $dataFlashlight->endpoint2->y), $dataFlashlight->numberFieldLines);
+                                    $flashlight = new LineSegmentFlashlight(new Point($dataFlashlight->endpoint1->x, $dataFlashlight->endpoint1->y), new Point($dataFlashlight->endpoint2->x, $dataFlashlight->endpoint2->y), $dataFlashlight->fieldLineCount);
                                 }
 
                                 else if($dataFlashlight->type === 'Circle')
                                 {
-                                    $flashlight = new CircleFlashlight(new Point($dataFlashlight->position->x, $dataFlashlight->position->y), $dataFlashlight->radius, $dataFlashlight->numberFieldLines);
+                                    $flashlight = new CircleFlashlight(new Point($dataFlashlight->position->x, $dataFlashlight->position->y), $dataFlashlight->radius, $dataFlashlight->fieldLineCount);
                                 }
 
                                 else if($dataFlashlight->type === 'Circular Arc')
                                 {
-                                    $flashlight = new CircularArcFlashlight(new Point($dataFlashlight->position->x, $dataFlashlight->position->y), $dataFlashlight->radius, pi() / 180 * $dataFlashlight->startingAngle, pi() / 180 * $dataFlashlight->endingAngle, $dataFlashlight->numberFieldLines);
+                                    $flashlight = new CircularArcFlashlight(new Point($dataFlashlight->position->x, $dataFlashlight->position->y), $dataFlashlight->radius, pi() / 180 * $dataFlashlight->startingAngle, pi() / 180 * $dataFlashlight->endingAngle, $dataFlashlight->fieldLineCount);
                                 }
 
                                 array_push($flashlights, $flashlight);
                             }
 
                             $collection = new Collection($charges, $flashlights);
-                            $fieldLineMaximumIterations = $dataFieldLineMaximumIterations;
+                            $fieldLineIterationLimit = $dataFieldLineIterationLimit;
                             $fieldLineIterationStep = $dataFieldLineIterationStep;
                             $width = 1000;
                             $height = 1000;
-                            $minimumX = $dataMinimumX;
-                            $minimumY = $dataMinimumY;
-                            $maximumX = $dataMaximumX;
-                            $maximumY = $dataMaximumY;
-                            $multiplierX = $width / ($maximumX - $minimumX);
-                            $multiplierY = $height / ($maximumY - $minimumY);
+                            $viewportMinimumX = $dataViewportMinimumX;
+                            $viewportMinimumY = $dataViewportMinimumY;
+                            $viewportMaximumX = $dataViewportMaximumX;
+                            $viewportMaximumY = $dataViewportMaximumY;
+                            $multiplierX = $width / ($viewportMaximumX - $viewportMinimumX);
+                            $multiplierY = $height / ($viewportMaximumY - $viewportMinimumY);
 
                             $image = new Imagick();
                             $image->newImage($width, $height, 'white');
@@ -772,7 +772,7 @@ if(json_last_error() === JSON_ERROR_NONE)
 
                             foreach($flashlights as $flashlight)
                             {
-                                for($l = 0; $l < $flashlight->numberFieldLines; $l++)
+                                for($l = 0; $l < $flashlight->fieldLineCount; $l++)
                                 {
                                     for($d = 1; $d >= -1; $d -= 2)
                                     {
@@ -781,7 +781,7 @@ if(json_last_error() === JSON_ERROR_NONE)
                                         $electricFieldDraw->pathStart();
                                         $electricFieldDraw->pathMoveToAbsolute($screenCoordinates[0], $screenCoordinates[1]);
 
-                                        for($i = 0; $i < $fieldLineMaximumIterations; $i++)
+                                        for($i = 0; $i < $fieldLineIterationLimit; $i++)
                                         {
                                             $fieldAtPoint = $collection->getElectricFieldVectorAtPoint($fieldLinePosition);
 
@@ -930,7 +930,7 @@ if(json_last_error() === JSON_ERROR_NONE)
                                 $elementsDraw->setFillOpacity(1);
                                 $elementsDraw->setFillColor('black');
 
-                                for($p = 0; $p < $flashlight->numberFieldLines; $p++)
+                                for($p = 0; $p < $flashlight->fieldLineCount; $p++)
                                 {
                                     $screenPosition = virtualPositionToScreenCoordinates($flashlight->getRootFieldLinePosition($p));
                                     $elementsDraw->circle($screenPosition[0], $screenPosition[1], $screenPosition[0] + 4, $screenPosition[1]);
@@ -956,14 +956,14 @@ function interpolate($startingValue, $endingValue, $interpolation)
 
 function virtualPositionToScreenCoordinates($position)
 {
-    global $minimumX, $multiplierX, $minimumY, $multiplierY;
-    return array(($position->x - $minimumX) * $multiplierX, ($position->y - $minimumY) * $multiplierY);
+    global $viewportMinimumX, $multiplierX, $viewportMinimumY, $multiplierY;
+    return array(($position->x - $viewportMinimumX) * $multiplierX, ($position->y - $viewportMinimumY) * $multiplierY);
 }
 
 function screenCoordinatesToVirtualPosition($x, $y)
 {
-    global $minimumX, $multiplierX, $minimumY, $multiplierY;
-    return new Point($x / $multiplierX + $minimumX, $y / $multiplierY + $minimumY);
+    global $viewportMinimumX, $multiplierX, $viewportMinimumY, $multiplierY;
+    return new Point($x / $multiplierX + $viewportMinimumX, $y / $multiplierY + $viewportMinimumY);
 }
 
 ?>
