@@ -22,56 +22,46 @@
                 <h2 class="tab1">Input: Contains the data that is inputted into the simulation</h2>
                     <h3 class="tab2">Charges: A list containing data for each electric charge<br></h3>
                         <p class="tab3">
-                            <mark class="lowlight">Type</mark>: Charge type<br>
-                            <mark class="lowlight">Charge</mark>: Charge value in coulombs<br><br>
+                            <mark class="lowlight">type</mark>: Charge type<br>
+                            <mark class="lowlight">charge</mark>: Charge value in coulombs<br><br>
                             If charge type is set to "Point", these parameters will be used<br>
-                            <mark class="lowlight">Position</mark>: X and Y coordinates of the point charge in meters<br><br>
-                            If charge type is set to "Finite Line", these parameters will be used<br>
-                            <mark class="lowlight">Endpoint1</mark>: X and Y coordinates of the first endpoint in meters<br>
-                            <mark class="lowlight">Endpoint2</mark>: X and Y coordinates of the second endpoint in meters<br><br>
-                            If charge type is set to "Regular Polygon", these parameters will be used<br>
-                            <mark class="lowlight">Position</mark>: X and Y coordinates of the charge in meters<br>
-                            <mark class="lowlight">Rotation</mark>: Angle of rotation of the shape in degrees<br>
-                            <mark class="lowlight">Sides</mark>: Number of sides on the polygon<br>
-                            <mark class="lowlight">Radius</mark>: The distance from the center to each corner of the polygon in meters<br>
+                            <mark class="lowlight">position</mark>: X and Y coordinates of the point charge in meters<br><br>
+                            If charge type is set to "Line Segment", these parameters will be used<br>
+                            <mark class="lowlight">position1</mark>: X and Y coordinates of the first endpoint in meters<br>
+                            <mark class="lowlight">position2</mark>: X and Y coordinates of the second endpoint in meters<br>
                         </p>
                     <h3 class="tab2">Flashlights: A list containing data for each flashlight that defines the starting position of the field lines</h3>
                         <p class="tab3">
-                            <mark class="lowlight">Type</mark>: Shape type of flashlight<br>
-                            <mark class="lowlight">Number of Field Lines</mark>: The number of electric field lines simulated with the flashlight<br><br>
+                            <mark class="lowlight">type</mark>: Shape type of flashlight<br>
+                            <mark class="lowlight">fieldLineCount</mark>: The number of electric field lines simulated with the flashlight<br><br>
                             If flashlight type is set to "Line Segment", these parameters will be used<br>
-                            <mark class="lowlight">Endpoint1</mark>: X and Y coordinates of the first endpoint in meters<br>
-                            <mark class="lowlight">Endpoint2</mark>: X and Y coordinates of the second endpoint in meters<br><br>
+                            <mark class="lowlight">position1</mark>: X and Y coordinates of the first endpoint in meters<br>
+                            <mark class="lowlight">position2</mark>: X and Y coordinates of the second endpoint in meters<br><br>
                             If flashlight type is set to "Circle", these parameters will be used<br>
-                            <mark class="lowlight">Position</mark>: X and Y coordinates of the center of the circle in meters<br>
-                            <mark class="lowlight">Radius</mark>: The radius of the circle in meters<br><br>
-                            If flashlight type is set to "Circular Arc", these parameters will be used<br>
-                            <mark class="lowlight">Position</mark>: X and Y coordinates of the center of the arc in meters<br>
-                            <mark class="lowlight">Radius</mark>: The radius of the arc in meters<br>
-                            <mark class="lowlight">Starting Angle</mark>: The starting angle of the arc in degrees<br>
-                            <mark class="lowlight">Ending Angle</mark>: The ending angle of the arc in degrees
+                            <mark class="lowlight">position</mark>: X and Y coordinates of the center of the circle in meters<br>
+                            <mark class="lowlight">radius</mark>: The radius of the circle in meters<br>
                         </p>
                 <h2 class="tab1">Output: Contains the data that is used for displaying the result</h2>
                 <p class="tab2">
-                    <mark class="lowlight">Maximum Iterations Per Field Line</mark>: The maximum number of calculations for each field line which helps prevent unnecessary computation<br>
-                    <mark class="lowlight">Step Per Field Line Iteration</mark>: The step traveled by each field line in meters before and after every calculation<br>
-                    <mark class="lowlight">MinimumX</mark>: The minimum x-value in meters that is displayed by the viewport<br>
-                    <mark class="lowlight">MinimumY</mark>: The minimum y-value in meters that is displayed by the viewport<br>
-                    <mark class="lowlight">MaximumX</mark>: The maximum x-value in meters that is displayed by the viewport<br>
-                    <mark class="lowlight">MaximumY</mark>: The maximum y-value in meters that is displayed by the viewport
+                    <mark class="lowlight">fieldLineIterationLimit</mark>: The maximum number of calculations for each field line which helps prevent unnecessary computation<br>
+                    <mark class="lowlight">fieldLineIterationStep</mark>: The step traveled by each field line in meters before and after every calculation<br>
+                    <mark class="lowlight">viewportMinimumX</mark>: The minimum x-value in meters that is displayed by the viewport<br>
+                    <mark class="lowlight">viewportMinimumY</mark>: The minimum y-value in meters that is displayed by the viewport<br>
+                    <mark class="lowlight">viewportMaximumX</mark>: The maximum x-value in meters that is displayed by the viewport<br>
+                    <mark class="lowlight">viewportMaximumY</mark>: The maximum y-value in meters that is displayed by the viewport
                 </p>
             <h1><mark class="highlight">Units</mark></h1>
                 <h3 class="tab1">
                     Charges: <mark class="lowlight">Coulombs (C)<br></mark>
                     Electric Fields: <mark class="lowlight">Newtons / Coulomb (N/C)<br></mark>
-                    Distances, coordinates: <mark class="lowlight">meters (m)</mark>
+                    Measurements: <mark class="lowlight">Meters (m)</mark>
                 </h3>
             <h1><mark class="highlight">Rules</mark></h1>
                 <h3 class="tab1">
-                    Number of charges is less than or equal to <mark class="lowlight">100</mark><br>
-                    Number of flashlights is less than or equal to <mark class="lowlight">100</mark><br>
-                    Total number of field lines is less than or equal to <mark class="lowlight">1000</mark><br>
-                    Total number of field lines &#215; Maximum Iterations Per Field Line &#215; Number of Charges is less than or equal to <mark class="lowlight">1,000,000</mark>
+                    Number of charges is less than or equal to <mark class="lowlight">1E2</mark><br>
+                    Number of flashlights is less than or equal to <mark class="lowlight">1E2</mark><br>
+                    Total number of field lines is less than or equal to <mark class="lowlight">1E3</mark><br>
+                    Total number of field lines <mark class="lowlight">&#215;</mark> Maximum Iterations Per Field Line <mark class="lowlight">&#215;</mark> Number of Charges is less than or equal to <mark class="lowlight">1E6</mark>
                 </h3>
         </div>
         <style>

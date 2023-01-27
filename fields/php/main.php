@@ -260,43 +260,43 @@ class PointCharge
     }
 }
 
-class FiniteLineCharge
+class LineSegmentCharge
 {
     public $charge;
-    public $endpoint1;
-    public $endpoint2;
+    public $position1;
+    public $position2;
     
-    function __construct($charge, $endpoint1, $endpoint2)
+    function __construct($charge, $position1, $position2)
     {
         $this->charge = $charge;
-        $this->endpoint1 = $endpoint1;
-        $this->endpoint2 = $endpoint2;
+        $this->position1 = $position1;
+        $this->position2 = $position2;
         return $this;
     }
     
     function getElectricFieldVectorAtPoint($point)
     {
-        $lineVector = $this->endpoint2->copy()->subtractTo($this->endpoint1);
+        $lineVector = $this->position2->copy()->subtractTo($this->position1);
         $distanceBetweenEndpoints = $lineVector->getMagnitude();
-        $relativePositionEndpoint1 = ($lineVector->x * ($this->endpoint1->x - $point->x) + $lineVector->y * ($this->endpoint1->y - $point->y)) / $distanceBetweenEndpoints;
-        $relativePositionEndpoint2 = $relativePositionEndpoint1 + $distanceBetweenEndpoints;
-        $squaredDistanceToEndpoint1 = $point->getSquaredDistanceTo($this->endpoint1);
-        $squaredDistanceToEndpoint2 = $point->getSquaredDistanceTo($this->endpoint2);
-        $distanceToEndpoint1 = sqrt($squaredDistanceToEndpoint1);
-        $distanceToEndpoint2 = sqrt($squaredDistanceToEndpoint2);
+        $relativePositionPoint1 = ($lineVector->x * ($this->position1->x - $point->x) + $lineVector->y * ($this->position1->y - $point->y)) / $distanceBetweenEndpoints;
+        $relativePositionPoint2 = $relativePositionPoint1 + $distanceBetweenEndpoints;
+        $squaredDistanceToPoint1 = $point->getSquaredDistanceTo($this->position1);
+        $squaredDistanceToPoint2 = $point->getSquaredDistanceTo($this->position2);
+        $distanceToPoint1 = sqrt($squaredDistanceToPoint1);
+        $distanceToPoint2 = sqrt($squaredDistanceToPoint2);
         
-        if($distanceToEndpoint1 == 0 || $distanceToEndpoint2 == 0)
+        if($distanceToPoint1 == 0 || $distanceToPoint2 == 0)
         {
             return INF;
         }
         
-        $distanceToProjection = sqrt(abs($squaredDistanceToEndpoint1 - pow($relativePositionEndpoint1, 2)));
+        $distanceToProjection = sqrt(abs($squaredDistanceToPoint1 - pow($relativePositionPoint1, 2)));
         $chargeDensity = $this->charge / $distanceBetweenEndpoints;
-        $electricFieldII = 8.9875517923E9 * $chargeDensity * (1 / $distanceToEndpoint2 - 1 / $distanceToEndpoint1);
+        $electricFieldII = 8.9875517923E9 * $chargeDensity * (1 / $distanceToPoint2 - 1 / $distanceToPoint1);
         
         if($distanceToProjection == 0)
         {
-            if($relativePositionEndpoint1 <= 0 && $relativePositionEndpoint2 >= 0)
+            if($relativePositionPoint1 <= 0 && $relativePositionPoint2 >= 0)
             {
                 return INF;
             }
@@ -309,10 +309,10 @@ class FiniteLineCharge
         
         else
         {
-            $electricFieldT = 8.9875517923E9 * $chargeDensity / $distanceToProjection * ($relativePositionEndpoint2 / $distanceToEndpoint2 - $relativePositionEndpoint1 / $distanceToEndpoint1);
+            $electricFieldT = 8.9875517923E9 * $chargeDensity / $distanceToProjection * ($relativePositionPoint2 / $distanceToPoint2 - $relativePositionPoint1 / $distanceToPoint1);
         }
         
-        if(($point->x - $this->endpoint1->x) * $lineVector->y < ($point->y - $this->endpoint1->y) * $lineVector->x)
+        if(($point->x - $this->position1->x) * $lineVector->y < ($point->y - $this->position1->y) * $lineVector->x)
         {
             return (new Point($lineVector->x * $electricFieldII - $lineVector->y * $electricFieldT, $lineVector->y * $electricFieldII + $lineVector->x * $electricFieldT))->divideBy($distanceBetweenEndpoints);
         }
@@ -325,57 +325,57 @@ class FiniteLineCharge
     
     function getElectricPotentialAtPoint($point)
     {
-        $lineVector = $this->endpoint2->copy()->subtractTo($this->endpoint1);
+        $lineVector = $this->position2->copy()->subtractTo($this->position1);
         $distanceBetweenEndpoints = $lineVector->getMagnitude();
-        $relativePositionEndpoint1 = ($lineVector->x * ($this->endpoint1->x - $point->x) + $lineVector->y * ($this->endpoint1->y - $point->y)) / $distanceBetweenEndpoints;
-        $relativePositionEndpoint2 = $relativePositionEndpoint1 + $distanceBetweenEndpoints;
-        $squaredDistanceToEndpoint1 = $point->getSquaredDistanceTo($this->endpoint1);
-        $squaredDistanceToEndpoint2 = $point->getSquaredDistanceTo($this->endpoint2);
-        $distanceToEndpoint1 = sqrt($squaredDistanceToEndpoint1);
-        $distanceToEndpoint2 = sqrt($squaredDistanceToEndpoint2);
-        $distanceToProjection = sqrt(abs($squaredDistanceToEndpoint1 - pow($relativePositionEndpoint1, 2)));
+        $relativePositionPoint1 = ($lineVector->x * ($this->position1->x - $point->x) + $lineVector->y * ($this->position1->y - $point->y)) / $distanceBetweenEndpoints;
+        $relativePositionPoint2 = $relativePositionPoint1 + $distanceBetweenEndpoints;
+        $squaredDistanceToPoint1 = $point->getSquaredDistanceTo($this->position1);
+        $squaredDistanceToPoint2 = $point->getSquaredDistanceTo($this->position2);
+        $distanceToPoint1 = sqrt($squaredDistanceToPoint1);
+        $distanceToPoint2 = sqrt($squaredDistanceToPoint2);
+        $distanceToProjection = sqrt(abs($squaredDistanceToPoint1 - pow($relativePositionPoint1, 2)));
         $chargeDensity = $this->charge / $distanceBetweenEndpoints;
         
-        if($distanceToProjection == 0 || abs($relativePositionEndpoint1) == $distanceToEndpoint1 || abs($relativePositionEndpoint2) == $distanceToEndpoint2)
+        if($distanceToProjection == 0 || abs($relativePositionPoint1) == $distanceToPoint1 || abs($relativePositionPoint2) == $distanceToPoint2)
         {
-            if($relativePositionEndpoint1 < 0 && $relativePositionEndpoint2 < 0)
+            if($relativePositionPoint1 < 0 && $relativePositionPoint2 < 0)
             {
-                return 8.9875517923E9 * $chargeDensity * log($relativePositionEndpoint1 / $relativePositionEndpoint2);
+                return 8.9875517923E9 * $chargeDensity * log($relativePositionPoint1 / $relativePositionPoint2);
             }
             
-            else if($relativePositionEndpoint1 <= 0 && $relativePositionEndpoint2 >= 0)
+            else if($relativePositionPoint1 <= 0 && $relativePositionPoint2 >= 0)
             {
                 return $this->charge * INF;
             }
             
-            else if($relativePositionEndpoint1 > 0 && $relativePositionEndpoint2 > 0)
+            else if($relativePositionPoint1 > 0 && $relativePositionPoint2 > 0)
             {
-                return 8.9875517923E9 * $chargeDensity * log($relativePositionEndpoint2 / $relativePositionEndpoint1);
+                return 8.9875517923E9 * $chargeDensity * log($relativePositionPoint2 / $relativePositionPoint1);
             }
         }
         
-        if($relativePositionEndpoint1 < 0 && $relativePositionEndpoint2 < 0)
+        if($relativePositionPoint1 < 0 && $relativePositionPoint2 < 0)
         {
-            return 8.9875517923E9 * $chargeDensity * log(($distanceToEndpoint1 - $relativePositionEndpoint1) / ($distanceToEndpoint2 - $relativePositionEndpoint2));
+            return 8.9875517923E9 * $chargeDensity * log(($distanceToPoint1 - $relativePositionPoint1) / ($distanceToPoint2 - $relativePositionPoint2));
         }
         
         else
         {
-            return 8.9875517923E9 * $chargeDensity * log(($relativePositionEndpoint2 + $distanceToEndpoint2) / ($relativePositionEndpoint1 + $distanceToEndpoint1));
+            return 8.9875517923E9 * $chargeDensity * log(($relativePositionPoint2 + $distanceToPoint2) / ($relativePositionPoint1 + $distanceToPoint1));
         }
     }
 }
 
 class LineSegmentFlashlight
 {
-    public $endpoint1;
-    public $endpoint2;
+    public $position1;
+    public $position2;
     public $fieldLineCount;
     
-    function __construct($endpoint1, $endpoint2, $fieldLineCount)
+    function __construct($position1, $position2, $fieldLineCount)
     {
-        $this->endpoint1 = $endpoint1;
-        $this->endpoint2 = $endpoint2;
+        $this->position1 = $position1;
+        $this->position2 = $position2;
         $this->fieldLineCount = $fieldLineCount;
         return $this;
     }
@@ -406,7 +406,7 @@ class LineSegmentFlashlight
             
             for($p = 0; $p < $this->fieldLineCount; $p++)
             {
-                array_push($this->rootFieldLinePositions, $this->endpoint1->copy()->interpolateTo($this->endpoint2, (($this->fieldLineCount === 1) ? 0.5 : $p / ($this->fieldLineCount - 1))));
+                array_push($this->rootFieldLinePositions, $this->position1->copy()->interpolateTo($this->position2, (($this->fieldLineCount === 1) ? 0.5 : $p / ($this->fieldLineCount - 1))));
             }
         }
         
@@ -455,58 +455,6 @@ class CircleFlashlight
             for($p = 0; $p < $this->fieldLineCount; $p++)
             {
                 array_push($this->rootFieldLinePositions, $this->position->copy()->addToPolar($this->radius, interpolate(0, 2 * pi(), $p / $this->fieldLineCount)));
-            }
-        }
-        
-        return $this->rootFieldLinePositions;
-    }
-}
-
-class CircularArcFlashlight
-{
-    public $position;
-    public $radius;
-    public $startingAngle;
-    public $endingAngle;
-    public $fieldLineCount;
-    
-    function __construct($position, $radius, $startingAngle, $endingAngle, $fieldLineCount)
-    {
-        $this->position = $position;
-        $this->radius = $radius;
-        $this->startingAngle = $startingAngle;
-        $this->endingAngle = $endingAngle;
-        $this->fieldLineCount = $fieldLineCount;
-        return $this;
-    }
-    
-    function resetRootFieldLinePositions()
-    {
-        unset($this->rootFieldLinePositions);
-    }
-    
-    function getRootFieldLinePosition($fieldLineNumber)
-    {
-        if(isset($this->rootFieldLinePositions))
-        {
-            return $this->rootFieldLinePositions[$fieldLineNumber];
-        }
-        
-        else
-        {
-            return $this->getRootFieldLinePositions()[$fieldLineNumber];
-        }
-    }
-    
-    function getRootFieldLinePositions()
-    {
-        if(!isset($this->rootFieldLinePositions))
-        {
-            $this->rootFieldLinePositions = array();
-            
-            for($p = 0; $p < $this->fieldLineCount; $p++)
-            {
-                array_push($this->rootFieldLinePositions, $this->position->copy()->addToPolar($this->radius, interpolate($this->startingAngle, $this->endingAngle, ($this->fieldLineCount === 1) ? 0.5 : $p / ($this->fieldLineCount - 1))));
             }
         }
         
@@ -565,32 +513,15 @@ if(json_last_error() === JSON_ERROR_NONE)
                                         }
                                     }
 
-                                    else if($dataCharge->type === 'Finite Line')
+                                    else if($dataCharge->type === 'Line Segment')
                                     {
-                                        if(property_exists($dataCharge, 'endpoint1') && property_exists($dataCharge, 'endpoint2'))
+                                        if(property_exists($dataCharge, 'position1') && property_exists($dataCharge, 'position2'))
                                         {
-                                            if(property_exists($dataCharge->endpoint1, 'x') && property_exists($dataCharge->endpoint1, 'y') && property_exists($dataCharge->endpoint2, 'x') && property_exists($dataCharge->endpoint2, 'y'))
+                                            if(property_exists($dataCharge->position1, 'x') && property_exists($dataCharge->position1, 'y') && property_exists($dataCharge->position2, 'x') && property_exists($dataCharge->position2, 'y'))
                                             {
-                                                if((is_int($dataCharge->endpoint1->x) || is_float($dataCharge->endpoint1->x)) && (is_int($dataCharge->endpoint1->y) || is_float($dataCharge->endpoint1->y)) && (is_int($dataCharge->endpoint2->x) || is_float($dataCharge->endpoint2->x)) && (is_int($dataCharge->endpoint2->y) || is_float($dataCharge->endpoint2->y)) && ($dataCharge->endpoint1->x != $dataCharge->endpoint2->x || $dataCharge->endpoint1->y != $dataCharge->endpoint2->y))
+                                                if((is_int($dataCharge->position1->x) || is_float($dataCharge->position1->x)) && (is_int($dataCharge->position1->y) || is_float($dataCharge->position1->y)) && (is_int($dataCharge->position2->x) || is_float($dataCharge->position2->x)) && (is_int($dataCharge->position2->y) || is_float($dataCharge->position2->y)) && ($dataCharge->position1->x != $dataCharge->position2->x || $dataCharge->position1->y != $dataCharge->position2->y))
                                                 {
-                                                    if(abs($dataCharge->endpoint1->x) <= 1E100 && abs($dataCharge->endpoint1->y) <= 1E100 && abs($dataCharge->endpoint2->x) <= 1E100 && abs($dataCharge->endpoint2->y) <= 1E100 && (abs($dataCharge->endpoint1->x - $dataCharge->endpoint2->x) >= 1E-100 || abs($dataCharge->endpoint1->y - $dataCharge->endpoint2->y) >= 1E-100))
-                                                    {
-                                                        continue;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    else if($dataCharge->type === 'Regular Polygon')
-                                    {
-                                        if(property_exists($dataCharge, 'position') && property_exists($dataCharge, 'rotation') && property_exists($dataCharge, 'sides') && property_exists($dataCharge, 'radius'))
-                                        {
-                                            if(property_exists($dataCharge->position, 'x') && property_exists($dataCharge->position, 'y'))
-                                            {
-                                                if((is_int($dataCharge->position->x) || is_float($dataCharge->position->x)) && (is_int($dataCharge->position->y) || is_float($dataCharge->position->y)) && (is_int($dataCharge->rotation) || is_float($dataCharge->rotation)) && is_int($dataCharge->sides) && (is_int($dataCharge->radius) || is_float($dataCharge->radius)))
-                                                {
-                                                    if(abs($dataCharge->position->x) <= 1E100 && abs($dataCharge->position->y) <= 1E100 && abs($dataCharge->rotation) <= 1E100 && $dataCharge->sides >= 3 && $dataCharge->radius > 1E-100 && $dataCharge->radius <= 1E100)
+                                                    if(abs($dataCharge->position1->x) <= 1E100 && abs($dataCharge->position1->y) <= 1E100 && abs($dataCharge->position2->x) <= 1E100 && abs($dataCharge->position2->y) <= 1E100 && (abs($dataCharge->position1->x - $dataCharge->position2->x) >= 1E-100 || abs($dataCharge->position1->y - $dataCharge->position2->y) >= 1E-100))
                                                     {
                                                         continue;
                                                     }
@@ -625,13 +556,13 @@ if(json_last_error() === JSON_ERROR_NONE)
                                         {
                                             if($dataFlashlight->type === 'Line Segment')
                                             {
-                                                if(property_exists($dataFlashlight, 'endpoint1') && property_exists($dataFlashlight, 'endpoint2'))
+                                                if(property_exists($dataFlashlight, 'position1') && property_exists($dataFlashlight, 'position2'))
                                                 {
-                                                    if(property_exists($dataFlashlight->endpoint1, 'x') && property_exists($dataFlashlight->endpoint1, 'y') && property_exists($dataFlashlight->endpoint2, 'x') && property_exists($dataFlashlight->endpoint2, 'y'))
+                                                    if(property_exists($dataFlashlight->position1, 'x') && property_exists($dataFlashlight->position1, 'y') && property_exists($dataFlashlight->position2, 'x') && property_exists($dataFlashlight->position2, 'y'))
                                                     {
-                                                        if((is_int($dataFlashlight->endpoint1->x) || is_float($dataFlashlight->endpoint1->x)) && (is_int($dataFlashlight->endpoint1->y) || is_float($dataFlashlight->endpoint1->y)) && (is_int($dataFlashlight->endpoint2->x) || is_float($dataFlashlight->endpoint2->x)) && (is_int($dataFlashlight->endpoint2->y) || is_float($dataFlashlight->endpoint2->y)))
+                                                        if((is_int($dataFlashlight->position1->x) || is_float($dataFlashlight->position1->x)) && (is_int($dataFlashlight->position1->y) || is_float($dataFlashlight->position1->y)) && (is_int($dataFlashlight->position2->x) || is_float($dataFlashlight->position2->x)) && (is_int($dataFlashlight->position2->y) || is_float($dataFlashlight->position2->y)))
                                                         {
-                                                            if(abs($dataFlashlight->endpoint1->x) <= 1E100 && abs($dataFlashlight->endpoint1->y) <= 1E100 && abs($dataFlashlight->endpoint2->x) <= 1E100 && abs($dataFlashlight->endpoint2->y) <= 1E100 && (abs($dataFlashlight->endpoint1->x - $dataFlashlight->endpoint2->x) >= 1E-100 || abs($dataFlashlight->endpoint1->y - $dataFlashlight->endpoint2->y) >= 1E-100))
+                                                            if(abs($dataFlashlight->position1->x) <= 1E100 && abs($dataFlashlight->position1->y) <= 1E100 && abs($dataFlashlight->position2->x) <= 1E100 && abs($dataFlashlight->position2->y) <= 1E100 && (abs($dataFlashlight->position1->x - $dataFlashlight->position2->x) >= 1E-100 || abs($dataFlashlight->position1->y - $dataFlashlight->position2->y) >= 1E-100))
                                                             {
                                                                 continue;
                                                             }
@@ -649,23 +580,6 @@ if(json_last_error() === JSON_ERROR_NONE)
                                                         if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)))
                                                         {
                                                             if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && $dataFlashlight->radius > 1E-100 && $dataFlashlight->radius <= 1E100)
-                                                            {
-                                                                continue;
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-
-                                            else if($dataFlashlight->type === 'Circular Arc')
-                                            {
-                                                if(property_exists($dataFlashlight, 'position') && property_exists($dataFlashlight, 'radius') && property_exists($dataFlashlight, 'startingAngle') && property_exists($dataFlashlight, 'endingAngle'))
-                                                {
-                                                    if(property_exists($dataFlashlight->position, 'x') && property_exists($dataFlashlight->position, 'y') && (is_int($dataFlashlight->radius) || is_float($dataFlashlight->radius)) && (is_int($dataFlashlight->startingAngle) || is_float($dataFlashlight->startingAngle)) && (is_int($dataFlashlight->endingAngle) || is_float($dataFlashlight->endingAngle)))
-                                                    {
-                                                        if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)))
-                                                        {
-                                                            if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && $dataFlashlight->radius > 1E-100 && $dataFlashlight->radius <= 1E100 && $dataFlashlight->startingAngle >= 0 && $dataFlashlight->endingAngle <= 360 && $dataFlashlight->endingAngle - $dataFlashlight->startingAngle >= 1E-100)
                                                             {
                                                                 continue;
                                                             }
@@ -693,25 +607,9 @@ if(json_last_error() === JSON_ERROR_NONE)
                                     array_push($charges, new PointCharge($dataCharge->charge, new Point($dataCharge->position->x, $dataCharge->position->y)));
                                 }
 
-                                else if($dataCharge->type === 'Finite Line')
+                                else if($dataCharge->type === 'Line Segment')
                                 {
-                                    array_push($charges, new FiniteLineCharge($dataCharge->charge, new Point($dataCharge->endpoint1->x, $dataCharge->endpoint1->y), new Point($dataCharge->endpoint2->x, $dataCharge->endpoint2->y)));
-                                }
-
-                                else if($dataCharge->type === 'Regular Polygon')
-                                {
-                                    $center = new Point($dataCharge->position->x, $dataCharge->position->y);
-                                    $points = array();
-
-                                    for($p = 0; $p < $dataCharge->sides; $p++)
-                                    {
-                                        array_push($points, $center->copy()->addToPolar($dataCharge->radius, pi() * (2 * $p / $dataCharge->sides + $dataCharge->rotation / 180 + 0.5)));
-                                    }
-
-                                    for($s = 0; $s < $dataCharge->sides; $s++)
-                                    {
-                                        array_push($charges, new FiniteLineCharge($dataCharge->charge / $dataCharge->sides, $points[$s], $points[($s + 1) % $dataCharge->sides]));
-                                    }
+                                    array_push($charges, new LineSegmentCharge($dataCharge->charge, new Point($dataCharge->position1->x, $dataCharge->position1->y), new Point($dataCharge->position2->x, $dataCharge->position2->y)));
                                 }
                             }
 
@@ -721,17 +619,12 @@ if(json_last_error() === JSON_ERROR_NONE)
                             {
                                 if($dataFlashlight->type === 'Line Segment')
                                 {
-                                    $flashlight = new LineSegmentFlashlight(new Point($dataFlashlight->endpoint1->x, $dataFlashlight->endpoint1->y), new Point($dataFlashlight->endpoint2->x, $dataFlashlight->endpoint2->y), $dataFlashlight->fieldLineCount);
+                                    $flashlight = new LineSegmentFlashlight(new Point($dataFlashlight->position1->x, $dataFlashlight->position1->y), new Point($dataFlashlight->position2->x, $dataFlashlight->position2->y), $dataFlashlight->fieldLineCount);
                                 }
 
                                 else if($dataFlashlight->type === 'Circle')
                                 {
                                     $flashlight = new CircleFlashlight(new Point($dataFlashlight->position->x, $dataFlashlight->position->y), $dataFlashlight->radius, $dataFlashlight->fieldLineCount);
-                                }
-
-                                else if($dataFlashlight->type === 'Circular Arc')
-                                {
-                                    $flashlight = new CircularArcFlashlight(new Point($dataFlashlight->position->x, $dataFlashlight->position->y), $dataFlashlight->radius, pi() / 180 * $dataFlashlight->startingAngle, pi() / 180 * $dataFlashlight->endingAngle, $dataFlashlight->fieldLineCount);
                                 }
 
                                 array_push($flashlights, $flashlight);
@@ -847,10 +740,10 @@ if(json_last_error() === JSON_ERROR_NONE)
                                     $elementsDraw->circle($screenCoordinates[0], $screenCoordinates[1], $screenCoordinates[0] + 15, $screenCoordinates[1]);
                                 }
 
-                                else if(get_class($charge) === 'FiniteLineCharge')
+                                else if(get_class($charge) === 'LineSegmentCharge')
                                 {
-                                    $screenCoordinates1 = virtualPositionToScreenCoordinates($charge->endpoint1);
-                                    $screenCoordinates2 = virtualPositionToScreenCoordinates($charge->endpoint2);
+                                    $screenCoordinates1 = virtualPositionToScreenCoordinates($charge->position1);
+                                    $screenCoordinates2 = virtualPositionToScreenCoordinates($charge->position2);
                                     $elementsDraw->setFillOpacity(0);
 
                                     if($charge->charge < 0)
@@ -906,8 +799,8 @@ if(json_last_error() === JSON_ERROR_NONE)
 
                                 if(get_class($flashlight) === 'LineSegmentFlashlight')
                                 {
-                                    $screenCoordinates1 = virtualPositionToScreenCoordinates($flashlight->endpoint1);
-                                    $screenCoordinates2 = virtualPositionToScreenCoordinates($flashlight->endpoint2);
+                                    $screenCoordinates1 = virtualPositionToScreenCoordinates($flashlight->position1);
+                                    $screenCoordinates2 = virtualPositionToScreenCoordinates($flashlight->position2);
                                     $elementsDraw->line($screenCoordinates1[0], $screenCoordinates1[1], $screenCoordinates2[0], $screenCoordinates2[1]);
                                 }
 
@@ -916,13 +809,6 @@ if(json_last_error() === JSON_ERROR_NONE)
                                     $screenCoordinates1 = virtualPositionToScreenCoordinates($flashlight->position->copy()->subtractToCoordinates($flashlight->radius, $flashlight->radius));
                                     $screenCoordinates2 = virtualPositionToScreenCoordinates($flashlight->position->copy()->addToCoordinates($flashlight->radius, $flashlight->radius));
                                     $elementsDraw->arc(min(max($screenCoordinates1[0], -100 * $width), 101 * $width), min(max($screenCoordinates1[1], -100 * $height), 101 * $height), min(max($screenCoordinates2[0], -100 * $width), 101 * $width), min(max($screenCoordinates2[1], -100 * $height), 101 * $height), 0, 360);
-                                }
-
-                                if(get_class($flashlight) === 'CircularArcFlashlight')
-                                {
-                                    $screenCoordinates1 = virtualPositionToScreenCoordinates($flashlight->position->copy()->subtractToCoordinates($flashlight->radius, $flashlight->radius));
-                                    $screenCoordinates2 = virtualPositionToScreenCoordinates($flashlight->position->copy()->addToCoordinates($flashlight->radius, $flashlight->radius));
-                                    $elementsDraw->arc(min(max($screenCoordinates1[0], -100 * $width), 101 * $width), min(max($screenCoordinates1[1], -100 * $height), 101 * $height), min(max($screenCoordinates2[0], -100 * $width), 101 * $width), min(max($screenCoordinates2[1], -100 * $height), 101 * $height), 180 / pi() * $flashlight->startingAngle, 180 / pi() * $flashlight->endingAngle);
                                 }
 
                                 $elementsDraw->setStrokeOpacity(0);
@@ -949,9 +835,9 @@ if(json_last_error() === JSON_ERROR_NONE)
     }
 }
 
-function interpolate($startingValue, $endingValue, $interpolation)
+function interpolate($value1, $value2, $interpolation)
 {
-    return ($startingValue + ($endingValue - $startingValue) * $interpolation);
+    return ($value1 + ($value2 - $value1) * $interpolation);
 }
 
 function virtualPositionToScreenCoordinates($position)
