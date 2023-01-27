@@ -5,12 +5,12 @@
         {
             "type": "Finite Line",
             "charge": 1.6021E-19,
-            "endpoint1":
+            "position1":
             {
                 "x": 0.4451,
                 "y": 0.2951
             },
-            "endpoint2":
+            "position2":
             {
                 "x": 0.7049,
                 "y": 0.4451
@@ -19,12 +19,12 @@
         {
             "type": "Finite Line",
             "charge": 1.6021E-19,
-            "endpoint1":
+            "position1":
             {
                 "x": 0.7049,
                 "y": 0.4451
             },
-            "endpoint2":
+            "position2":
             {
                 "x": 0.5549,
                 "y": 0.7049
@@ -33,12 +33,12 @@
         {
             "type": "Finite Line",
             "charge": 1.6021E-19,
-            "endpoint1":
+            "position1":
             {
                 "x": 0.5549,
                 "y": 0.7049
             },
-            "endpoint2":
+            "position2":
             {
                 "x": 0.2591,
                 "y": 0.7549
@@ -47,12 +47,12 @@
         {
             "type": "Finite Line",
             "charge": 1.6021E-19,
-            "endpoint1":
+            "position1":
             {
                 "x": 0.2951,
                 "y": 0.5549
             },
-            "endpoint2":
+            "position2":
             {
                 "x": 0.4451,
                 "y": 0.2951
@@ -67,16 +67,16 @@
                 "y": 0.5
             },
             "radius": 0.45,
-            "numberOfFieldLines": 60
+            "fieldLineCount": 60
         }]
     },
     "output":
     {
-        "maximumIterationsPerFieldLine": 1000,
-        "stepPerFieldLineIteration": 0.001,
-        "minimumX": 0,
-        "minimumY": 0,
-        "maximumX": 1,
-        "maximumY": 1
+        "fieldLineIterationCount": 1000,
+        "fieldLineIterationStep": 0.001,
+        "viewportMinimumX": 0,
+        "viewportMinimumY": 0,
+        "viewportMaximumX": 1,
+        "viewportMaximumY": 1
     }
 }
