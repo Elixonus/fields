@@ -19,8 +19,8 @@
         <img id="image" style="display: none;">
         <div class="information">
             <h1><mark class="highlight">Definitions</mark></h1>
-                <h2 class="tab1">Input: Contains the data that is inputted into the simulation</h2>
-                    <h3 class="tab2">Charges: A list containing data for each electric charge<br></h3>
+                <h2 class="tab1"><mark class="lowlight">input</mark>: Contains the data that is inputted into the simulation</h2>
+                    <h3 class="tab2"><mark class="lowlight">charges</mark>: A list containing data for each electric charge<br></h3>
                         <p class="tab3">
                             <mark class="lowlight">type</mark>: Charge type<br>
                             <mark class="lowlight">charge</mark>: Charge value in coulombs<br><br>
@@ -30,7 +30,7 @@
                             <mark class="lowlight">position1</mark>: X and Y coordinates of the first endpoint in meters<br>
                             <mark class="lowlight">position2</mark>: X and Y coordinates of the second endpoint in meters<br>
                         </p>
-                    <h3 class="tab2">Flashlights: A list containing data for each flashlight that defines the starting position of the field lines</h3>
+                    <h3 class="tab2"><mark class="lowlight">flashlights</mark>: A list containing data for each flashlight that defines the starting position of the field lines</h3>
                         <p class="tab3">
                             <mark class="lowlight">type</mark>: Shape type of flashlight<br>
                             <mark class="lowlight">fieldLineCount</mark>: The number of electric field lines simulated with the flashlight<br><br>
@@ -41,7 +41,7 @@
                             <mark class="lowlight">position</mark>: X and Y coordinates of the center of the circle in meters<br>
                             <mark class="lowlight">radius</mark>: The radius of the circle in meters<br>
                         </p>
-                <h2 class="tab1">Output: Contains the data that is used for displaying the result</h2>
+                <h2 class="tab1"><mark class="lowlight">output</mark>: Contains the data that is used for displaying the result</h2>
                 <p class="tab2">
                     <mark class="lowlight">fieldLineIterationLimit</mark>: The maximum number of calculations for each field line which helps prevent unnecessary computation<br>
                     <mark class="lowlight">fieldLineIterationStep</mark>: The step traveled by each field line in meters before and after every calculation<br>
@@ -58,10 +58,9 @@
                 </h3>
             <h1><mark class="highlight">Rules</mark></h1>
                 <h3 class="tab1">
-                    Number of charges is less than or equal to <mark class="lowlight">1E2</mark><br>
-                    Number of flashlights is less than or equal to <mark class="lowlight">1E2</mark><br>
-                    Total number of field lines is less than or equal to <mark class="lowlight">1E3</mark><br>
-                    Total number of field lines <mark class="lowlight">&#215;</mark> Maximum Iterations Per Field Line <mark class="lowlight">&#215;</mark> Number of Charges is less than or equal to <mark class="lowlight">1E6</mark>
+                    Charge Count &leq; <mark class="lowlight">1E2</mark> (to limit size of input stream)<br>
+                    Flashlight Count &leq; <mark class="lowlight">1E2</mark> (to limit size of input stream)<br>
+                    Field Line Count Total <mark class="lowlight">&times;</mark> Field Line Iteration Limit <mark class="lowlight">&times;</mark> Charge Count &leq; <mark class="lowlight">1E6</mark> (to save processing power)
                 </h3>
         </div>
         <style>

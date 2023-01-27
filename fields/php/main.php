@@ -172,7 +172,7 @@ class Collection
     
     function getElectricFieldVectorAtPoint($point)
     {
-        $totalElectricField = new Point(0, 0);
+        $electricFieldNet = new Point(0, 0);
         
         foreach($this->charges as $charge)
         {
@@ -185,16 +185,16 @@ class Collection
             
             else
             {
-                $totalElectricField->addTo($electricField);
+                $electricFieldNet->addTo($electricField);
             }
         }
         
-        return $totalElectricField;
+        return $electricFieldNet;
     }
     
     function getElectricPotentialAtPoint($point)
     {
-        $totalElectricPotential = 0;
+        $electricPotentialNet = 0;
         
         foreach($this->charges as $charge)
         {
@@ -207,11 +207,11 @@ class Collection
             
             else
             {
-                $totalElectricPotential += $electricPotential;
+                $electricPotentialNet += $electricPotential;
             }
         }
         
-        return $totalElectricPotential;
+        return $electricPotentialNet;
     }
 }
 
@@ -486,7 +486,7 @@ if(json_last_error() === JSON_ERROR_NONE)
             {
                 if(count($dataCharges) <= 100 && count($dataFlashlights) <= 100 && $dataFieldLineIterationLimit >= 0 && $dataFieldLineIterationStep >= 1E-100 && $dataFieldLineIterationStep <= 1E100 && $dataViewportMinimumX >= -1E100 && $dataViewportMinimumY >= -1E100 && $dataViewportMaximumX <= 1E100 && $dataViewportMaximumY <= 1E100 && $dataViewportMaximumX - $dataViewportMinimumX >= 1E-100 && $dataViewportMaximumY - $dataViewportMinimumY >= 1E-100)
                 {
-                    $chargesValid = true;
+                    $validCharges = true;
 
                     foreach($dataCharges as $dataCharge)
                     {
@@ -533,14 +533,14 @@ if(json_last_error() === JSON_ERROR_NONE)
                             }
                         }
 
-                        $chargesValid = false;
+                        $validCharges = false;
                         break;
                     }
 
-                    if($chargesValid)
+                    if($validCharges)
                     {
-                        $flashlightsValid = true;
-                        $totalfieldLineCount = 0;
+                        $validFlashlights = true;
+                        $fieldLineCount = 0;
 
                         foreach($dataFlashlights as $dataFlashlight)
                         {
@@ -550,39 +550,36 @@ if(json_last_error() === JSON_ERROR_NONE)
                                 {
                                     if($dataFlashlight->fieldLineCount >= 0 && $dataFlashlight->fieldLineCount <= 1000)
                                     {
-                                        $totalfieldLineCount += $dataFlashlight->fieldLineCount;
+                                        $fieldLineCount += $dataFlashlight->fieldLineCount;
 
-                                        if($totalfieldLineCount <= 1000)
+                                        if($dataFlashlight->type === 'Line Segment')
                                         {
-                                            if($dataFlashlight->type === 'Line Segment')
+                                            if(property_exists($dataFlashlight, 'position1') && property_exists($dataFlashlight, 'position2'))
                                             {
-                                                if(property_exists($dataFlashlight, 'position1') && property_exists($dataFlashlight, 'position2'))
+                                                if(property_exists($dataFlashlight->position1, 'x') && property_exists($dataFlashlight->position1, 'y') && property_exists($dataFlashlight->position2, 'x') && property_exists($dataFlashlight->position2, 'y'))
                                                 {
-                                                    if(property_exists($dataFlashlight->position1, 'x') && property_exists($dataFlashlight->position1, 'y') && property_exists($dataFlashlight->position2, 'x') && property_exists($dataFlashlight->position2, 'y'))
+                                                    if((is_int($dataFlashlight->position1->x) || is_float($dataFlashlight->position1->x)) && (is_int($dataFlashlight->position1->y) || is_float($dataFlashlight->position1->y)) && (is_int($dataFlashlight->position2->x) || is_float($dataFlashlight->position2->x)) && (is_int($dataFlashlight->position2->y) || is_float($dataFlashlight->position2->y)))
                                                     {
-                                                        if((is_int($dataFlashlight->position1->x) || is_float($dataFlashlight->position1->x)) && (is_int($dataFlashlight->position1->y) || is_float($dataFlashlight->position1->y)) && (is_int($dataFlashlight->position2->x) || is_float($dataFlashlight->position2->x)) && (is_int($dataFlashlight->position2->y) || is_float($dataFlashlight->position2->y)))
+                                                        if(abs($dataFlashlight->position1->x) <= 1E100 && abs($dataFlashlight->position1->y) <= 1E100 && abs($dataFlashlight->position2->x) <= 1E100 && abs($dataFlashlight->position2->y) <= 1E100 && (abs($dataFlashlight->position1->x - $dataFlashlight->position2->x) >= 1E-100 || abs($dataFlashlight->position1->y - $dataFlashlight->position2->y) >= 1E-100))
                                                         {
-                                                            if(abs($dataFlashlight->position1->x) <= 1E100 && abs($dataFlashlight->position1->y) <= 1E100 && abs($dataFlashlight->position2->x) <= 1E100 && abs($dataFlashlight->position2->y) <= 1E100 && (abs($dataFlashlight->position1->x - $dataFlashlight->position2->x) >= 1E-100 || abs($dataFlashlight->position1->y - $dataFlashlight->position2->y) >= 1E-100))
-                                                            {
-                                                                continue;
-                                                            }
+                                                            continue;
                                                         }
                                                     }
                                                 }
                                             }
+                                        }
 
-                                            else if($dataFlashlight->type === 'Circle')
+                                        else if($dataFlashlight->type === 'Circle')
+                                        {
+                                            if(property_exists($dataFlashlight, 'position') && property_exists($dataFlashlight, 'radius'))
                                             {
-                                                if(property_exists($dataFlashlight, 'position') && property_exists($dataFlashlight, 'radius'))
+                                                if(property_exists($dataFlashlight->position, 'x') && property_exists($dataFlashlight->position, 'y') && (is_int($dataFlashlight->radius) || is_float($dataFlashlight->radius)))
                                                 {
-                                                    if(property_exists($dataFlashlight->position, 'x') && property_exists($dataFlashlight->position, 'y') && (is_int($dataFlashlight->radius) || is_float($dataFlashlight->radius)))
+                                                    if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)))
                                                     {
-                                                        if((is_int($dataFlashlight->position->x) || is_float($dataFlashlight->position->x)) && (is_int($dataFlashlight->position->y) || is_float($dataFlashlight->position->y)))
+                                                        if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && $dataFlashlight->radius > 1E-100 && $dataFlashlight->radius <= 1E100)
                                                         {
-                                                            if(abs($dataFlashlight->position->x) <= 1E100 && abs($dataFlashlight->position->y) <= 1E100 && $dataFlashlight->radius > 1E-100 && $dataFlashlight->radius <= 1E100)
-                                                            {
-                                                                continue;
-                                                            }
+                                                            continue;
                                                         }
                                                     }
                                                 }
@@ -592,11 +589,11 @@ if(json_last_error() === JSON_ERROR_NONE)
                                 }
                             }
 
-                            $flashlightsValid = false;
+                            $validFlashlights = false;
                             break;
                         }
 
-                        if($flashlightsValid && $totalfieldLineCount * $dataFieldLineIterationLimit * count($dataCharges) <= 1000000)
+                        if($validFlashlights && $fieldLineCount * $dataFieldLineIterationLimit * count($dataCharges) <= 1000000)
                         {
                             $charges = array();
 
