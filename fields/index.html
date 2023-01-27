@@ -174,7 +174,7 @@
                 if(!waiting)
                 {
                     waiting = true;
-                    document.getElementById("button").innerHTML = "Button...";
+                    document.getElementById("button").innerHTML = "Submit...";
                     const xhttp = new XMLHttpRequest();
                     
                     xhttp.onreadystatechange = function()
@@ -182,7 +182,7 @@
                         if(this.readyState == 4 && this.status == 200)
                         {
                             waiting = false;
-                            document.getElementById("button").innerHTML = "Button...";
+                            document.getElementById("button").innerHTML = "Submit";
                             
                             if(this.responseText.length > 0)
                             {

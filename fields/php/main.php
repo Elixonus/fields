@@ -713,7 +713,7 @@ if(json_last_error() === JSON_ERROR_NONE)
 
                             foreach($charges as $charge)
                             {
-                                if(get_class($charge) === 'PointCharge')
+                                if($charge instanceof PointCharge)
                                 {
                                     $screenCoordinates = virtualPositionToScreenCoordinates($charge->position);
                                     $elementsDraw->setFillOpacity(1);
@@ -740,7 +740,7 @@ if(json_last_error() === JSON_ERROR_NONE)
                                     $elementsDraw->circle($screenCoordinates[0], $screenCoordinates[1], $screenCoordinates[0] + 15, $screenCoordinates[1]);
                                 }
 
-                                else if(get_class($charge) === 'LineSegmentCharge')
+                                else if($charge instanceof LineSegmentCharge)
                                 {
                                     $screenCoordinates1 = virtualPositionToScreenCoordinates($charge->position1);
                                     $screenCoordinates2 = virtualPositionToScreenCoordinates($charge->position2);
@@ -797,14 +797,14 @@ if(json_last_error() === JSON_ERROR_NONE)
                                 $elementsDraw->setFillOpacity(0);
                                 $elementsDraw->setFillColor('black');
 
-                                if(get_class($flashlight) === 'LineSegmentFlashlight')
+                                if($flashlight instanceof LineSegmentFlashlight)
                                 {
                                     $screenCoordinates1 = virtualPositionToScreenCoordinates($flashlight->position1);
                                     $screenCoordinates2 = virtualPositionToScreenCoordinates($flashlight->position2);
                                     $elementsDraw->line($screenCoordinates1[0], $screenCoordinates1[1], $screenCoordinates2[0], $screenCoordinates2[1]);
                                 }
 
-                                if(get_class($flashlight) === 'CircleFlashlight')
+                                if($flashlight instanceof CircleFlashlight)
                                 {
                                     $screenCoordinates1 = virtualPositionToScreenCoordinates($flashlight->position->copy()->subtractToCoordinates($flashlight->radius, $flashlight->radius));
                                     $screenCoordinates2 = virtualPositionToScreenCoordinates($flashlight->position->copy()->addToCoordinates($flashlight->radius, $flashlight->radius));
