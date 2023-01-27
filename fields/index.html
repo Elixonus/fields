@@ -18,61 +18,61 @@
         <br>
         <img id="image" style="display: none;">
         <div class="information">
-            <h1><mark class="highlight">Definitions</mark></h1>
-                <h2 class="tab1"><mark class="lowlight">input</mark>: Contains the data that is inputted into the simulation</h2>
-                    <h3 class="tab2"><mark class="lowlight">charges</mark>: A list containing data for each electric charge<br></h3>
+            <h1><mark class="section">Definitions</mark></h1>
+                <h2 class="tab1"><mark class="keyword">input</mark>: Contains the data that is inputted into the simulation</h2>
+                    <h3 class="tab2"><mark class="keyword">charges</mark>: A list containing data for each electric charge<br></h3>
                         <p class="tab3">
-                            <mark class="lowlight">type</mark>: Charge type<br>
-                            <mark class="lowlight">charge</mark>: Charge value in coulombs<br><br>
+                            <mark class="keyword">type</mark>: Charge type<br>
+                            <mark class="keyword">charge</mark>: Charge value in coulombs<br><br>
                             If charge type is set to "Point", these parameters will be used<br>
-                            <mark class="lowlight">position</mark>: X and Y coordinates of the point charge in meters<br><br>
+                            <mark class="keyword">position</mark>: X and Y coordinates of the point charge in meters<br><br>
                             If charge type is set to "Line Segment", these parameters will be used<br>
-                            <mark class="lowlight">position1</mark>: X and Y coordinates of the first endpoint in meters<br>
-                            <mark class="lowlight">position2</mark>: X and Y coordinates of the second endpoint in meters<br>
+                            <mark class="keyword">position1</mark>: X and Y coordinates of the first endpoint in meters<br>
+                            <mark class="keyword">position2</mark>: X and Y coordinates of the second endpoint in meters<br>
                         </p>
-                    <h3 class="tab2"><mark class="lowlight">flashlights</mark>: A list containing data for each flashlight that defines the starting position of the field lines</h3>
+                    <h3 class="tab2"><mark class="keyword">flashlights</mark>: A list containing data for each flashlight that defines the starting position of the field lines</h3>
                         <p class="tab3">
-                            <mark class="lowlight">type</mark>: Shape type of flashlight<br>
-                            <mark class="lowlight">fieldLineCount</mark>: The number of electric field lines simulated with the flashlight<br><br>
+                            <mark class="keyword">type</mark>: Shape type of flashlight<br>
+                            <mark class="keyword">fieldLineCount</mark>: The number of electric field lines simulated with the flashlight<br><br>
                             If flashlight type is set to "Line Segment", these parameters will be used<br>
-                            <mark class="lowlight">position1</mark>: X and Y coordinates of the first endpoint in meters<br>
-                            <mark class="lowlight">position2</mark>: X and Y coordinates of the second endpoint in meters<br><br>
+                            <mark class="keyword">position1</mark>: X and Y coordinates of the first endpoint in meters<br>
+                            <mark class="keyword">position2</mark>: X and Y coordinates of the second endpoint in meters<br><br>
                             If flashlight type is set to "Circle", these parameters will be used<br>
-                            <mark class="lowlight">position</mark>: X and Y coordinates of the center of the circle in meters<br>
-                            <mark class="lowlight">radius</mark>: The radius of the circle in meters<br>
+                            <mark class="keyword">position</mark>: X and Y coordinates of the center of the circle in meters<br>
+                            <mark class="keyword">radius</mark>: The radius of the circle in meters<br>
                         </p>
-                <h2 class="tab1"><mark class="lowlight">output</mark>: Contains the data that is used for displaying the result</h2>
+                <h2 class="tab1"><mark class="keyword">output</mark>: Contains the data that is used for displaying the result</h2>
                 <p class="tab2">
-                    <mark class="lowlight">fieldLineIterationLimit</mark>: The maximum number of calculations for each field line which helps prevent unnecessary computation<br>
-                    <mark class="lowlight">fieldLineIterationStep</mark>: The step traveled by each field line in meters before and after every calculation<br>
-                    <mark class="lowlight">viewportMinimumX</mark>: The minimum x-value in meters that is displayed by the viewport<br>
-                    <mark class="lowlight">viewportMinimumY</mark>: The minimum y-value in meters that is displayed by the viewport<br>
-                    <mark class="lowlight">viewportMaximumX</mark>: The maximum x-value in meters that is displayed by the viewport<br>
-                    <mark class="lowlight">viewportMaximumY</mark>: The maximum y-value in meters that is displayed by the viewport
+                    <mark class="keyword">fieldLineIterationLimit</mark>: The maximum number of calculations for each field line which helps prevent unnecessary computation<br>
+                    <mark class="keyword">fieldLineIterationStep</mark>: The step traveled by each field line in meters before and after every calculation<br>
+                    <mark class="keyword">viewportMinimumX</mark>: The minimum x-value in meters that is displayed by the viewport<br>
+                    <mark class="keyword">viewportMinimumY</mark>: The minimum y-value in meters that is displayed by the viewport<br>
+                    <mark class="keyword">viewportMaximumX</mark>: The maximum x-value in meters that is displayed by the viewport<br>
+                    <mark class="keyword">viewportMaximumY</mark>: The maximum y-value in meters that is displayed by the viewport
                 </p>
-            <h1><mark class="highlight">Units</mark></h1>
+            <h1><mark class="section">Units</mark></h1>
                 <h3 class="tab1">
-                    Charges: <mark class="lowlight">Coulombs (C)<br></mark>
-                    Electric Fields: <mark class="lowlight">Newtons / Coulomb (N/C)<br></mark>
-                    Measurements: <mark class="lowlight">Meters (m)</mark>
+                    Charges: <mark class="keyword">Coulombs (C)<br></mark>
+                    Electric Fields: <mark class="keyword">Newtons / Coulomb (N/C)<br></mark>
+                    Measurements: <mark class="keyword">Meters (m)</mark>
                 </h3>
-            <h1><mark class="highlight">Rules</mark></h1>
+            <h1><mark class="section">Rules</mark></h1>
                 <h3 class="tab1">
-                    Charge Count &leq; <mark class="lowlight">1E2</mark> (to limit size of input stream)<br>
-                    Flashlight Count &leq; <mark class="lowlight">1E2</mark> (to limit size of input stream)<br>
-                    Field Line Count Total <mark class="lowlight">&times;</mark> Field Line Iteration Limit <mark class="lowlight">&times;</mark> Charge Count &leq; <mark class="lowlight">1E6</mark> (to save processing power)
+                    Charge Count &leq; <mark class="keyword">1E2</mark> (to limit size of input stream)<br>
+                    Flashlight Count &leq; <mark class="keyword">1E2</mark> (to limit size of input stream)<br>
+                    Field Line Count Total <mark class="keyword">&times;</mark> Field Line Iteration Limit <mark class="keyword">&times;</mark> Charge Count &leq; <mark class="keyword">1E6</mark> (to save processing power)
                 </h3>
         </div>
         <style>
         
             *
             {
-                color: white;
+                color: #ffffff;
             }
             
             body
             {
-                background-color: black;
+                background-color: #000000;
             }
             
             #select, #input, #button
@@ -118,13 +118,13 @@
                 font-family: "Noto Sans";
             }
             
-            .highlight
+            .section
             {
-                color: black;
+                color: #000000;
                 background: #ffa040;
             }
             
-            .lowlight
+            .keyword
             {
                 color: #ffa040;
                 background: none;
