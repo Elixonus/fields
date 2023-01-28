@@ -471,7 +471,7 @@ if(json_last_error() === JSON_ERROR_NONE)
         $dataInput = $data->input;
         $dataOutput = $data->output;
 
-        if(property_exists($dataInput, 'charges') && property_exists($dataInput, 'flashlights') && property_exists($dataOutput, 'fieldLineIterationLimit') && property_exists($dataOutput, 'fieldLineIterationStep') && property_exists($dataOutput, 'viewportMinimumX') && property_exists($dataOutput, 'viewportMinimumY') && property_exists($dataOutput, 'viewportMaximumX') && property_exists($dataOutput, 'viewportMaximumY'));
+        if(property_exists($dataInput, 'charges') && property_exists($dataInput, 'flashlights') && property_exists($dataOutput, 'fieldLineIterationLimit') && property_exists($dataOutput, 'fieldLineIterationStep') && property_exists($dataOutput, 'viewportMinimumX') && property_exists($dataOutput, 'viewportMinimumY') && property_exists($dataOutput, 'viewportMaximumX') && property_exists($dataOutput, 'viewportMaximumY'))
         {
             $dataCharges = $dataInput->charges;
             $dataFlashlights = $dataInput->flashlights;
