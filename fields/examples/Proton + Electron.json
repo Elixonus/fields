@@ -29,30 +29,30 @@
                 "y": 0.5
             },
             "radius": 0.45,
-            "numberOfFieldLines": 20
+            "fieldLineCount": 20
         },
         {
             "type": "Line Segment",
-            "endpoint1":
+            "position1":
             {
                 "x": 0.5,
                 "y": 0.1
             },
-            "endpoint2":
+            "position2":
             {
                 "x": 0.5,
                 "y": 0.9
             },
-            "numberOfFieldLines": 20
+            "fieldLineCount": 20
         }]
     },
     "output":
     {
-        "maximumIterationsPerFieldLine": 1000,
-        "stepPerFieldLineIteration": 0.001,
-        "minimumX": 0,
-        "minimumY": 0,
-        "maximumX": 1,
-        "maximumY": 1
+        "fieldLineIterationLimit": 1000,
+        "fieldLineIterationStep": 0.001,
+        "viewportMinimumX": 0,
+        "viewportMinimumY": 0,
+        "viewportMaximumX": 1,
+        "viewportMaximumY": 1
     }
 }
