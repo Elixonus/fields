@@ -3,7 +3,7 @@
     {
         "charges": [
         {
-            "type": "Finite Line",
+            "type": "Line Segment",
             "charge": 1.6021E-19,
             "position1":
             {
@@ -17,7 +17,7 @@
             }
         },
         {
-            "type": "Finite Line",
+            "type": "Line Segment",
             "charge": -1.6021E-19,
             "position1":
             {
@@ -58,7 +58,7 @@
     },
     "output":
     {
-        "fieldLineIterationCount": 1000,
+        "fieldLineIterationLimit": 1000,
         "fieldLineIterationStep": 0.001,
         "viewportMinimumX": 0,
         "viewportMinimumY": 0,

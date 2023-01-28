@@ -3,7 +3,7 @@
     {
         "charges": [
         {
-            "type": "Finite Line",
+            "type": "Line Segment",
             "charge": 1.6021E-19,
             "position1":
             {
@@ -17,9 +17,9 @@
             }
         },
         {
-            "type": "Finite Line",
+            "type": "Line Segment",
             "charge": -1.6021E-19,
-            "Position1":
+            "position1":
             {
                 "x": 0.6,
                 "y": 0.5
