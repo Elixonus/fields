@@ -30,14 +30,14 @@
                             <mark class="keyword">position1</mark>: X and Y coordinates of the first endpoint in meters<br>
                             <mark class="keyword">position2</mark>: X and Y coordinates of the second endpoint in meters<br>
                         </p>
-                    <h3 class="tab2"><mark class="keyword">flashlights</mark>: A list containing data for each flashlight that defines the starting position of the field lines</h3>
+                    <h3 class="tab2"><mark class="keyword">graphers</mark>: A list containing data for each grapher that defines the starting position of the field lines</h3>
                         <p class="tab3">
-                            <mark class="keyword">type</mark>: Shape type of flashlight<br>
-                            <mark class="keyword">fieldLineCount</mark>: The number of electric field lines simulated with the flashlight<br><br>
-                            If flashlight type is set to "Line Segment", these parameters will be used<br>
+                            <mark class="keyword">type</mark>: Shape type of grapher<br>
+                            <mark class="keyword">fieldLineCount</mark>: The number of electric field lines simulated with the grapher<br><br>
+                            If grapher type is set to "Line Segment", these parameters will be used<br>
                             <mark class="keyword">position1</mark>: X and Y coordinates of the first endpoint in meters<br>
                             <mark class="keyword">position2</mark>: X and Y coordinates of the second endpoint in meters<br><br>
-                            If flashlight type is set to "Circle", these parameters will be used<br>
+                            If grapher type is set to "Circle", these parameters will be used<br>
                             <mark class="keyword">position</mark>: X and Y coordinates of the center of the circle in meters<br>
                             <mark class="keyword">radius</mark>: The radius of the circle in meters<br>
                         </p>
@@ -59,7 +59,7 @@
             <h1><mark class="section">Rules</mark></h1>
                 <h3 class="tab1">
                     Charge Count &leq; <mark class="keyword">1E2</mark> (to limit size of input stream)<br>
-                    Flashlight Count &leq; <mark class="keyword">1E2</mark> (to limit size of input stream)<br>
+                    Grapher Count &leq; <mark class="keyword">1E2</mark> (to limit size of input stream)<br>
                     Field Line Count Total <mark class="keyword">&times;</mark> Field Line Iteration Limit <mark class="keyword">&times;</mark> Charge Count &leq; <mark class="keyword">1E6</mark> (to save processing power)
                 </h3>
         </div>
@@ -188,6 +188,7 @@
                             
                             if(this.responseText.length > 0)
                             {
+                                console.log(this.responseText);
                                 image.src = "data:image/png;base64, " + this.responseText;
                                 image.removeAttribute("style");
                             }

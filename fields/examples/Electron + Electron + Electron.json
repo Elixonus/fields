@@ -29,7 +29,7 @@
                 "y": 0.3
             }
         }],
-        "flashlights": [
+        "graphers": [
         {
             "type": "Circle",
             "position":
