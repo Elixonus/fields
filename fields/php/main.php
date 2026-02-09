@@ -788,8 +788,7 @@ if(json_last_error() === JSON_ERROR_NONE)
 
                             foreach($graphers as $grapher)
                             {
-                                $elementsDraw->setStrokeOpacity(0.3);
-                                $elementsDraw->setStrokeColor('black');
+                                $elementsDraw->setStrokeColor(new ImagickPixel('rgba(0, 0, 0, 0.3)'));
                                 $elementsDraw->setFillColor('none');
 
                                 if($grapher instanceof LineSegmentGrapher)

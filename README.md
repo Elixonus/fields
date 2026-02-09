@@ -1,6 +1,6 @@
 # fields ⚡
 
-Electric field line visualization simulation of point charges and finite line charges.
+Electric field line visualizer/simulator
 
 ## Simulation
 
